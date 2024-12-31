@@ -6,28 +6,33 @@
 //
 
 import SwiftUI
+import GoogleSignIn
+import GoogleSignInSwift
 
 struct ContentView: View {
     // タブの選択項目を保持する
+    @StateObject private var viewModel = CalendarViewModel()
     @State var selection = 1
+    @State private var accessToken: String?
+
     var body: some View {
 
         TabView(selection: $selection) {
-            TopView()
+            WorkoutRecordView()
                 .tabItem {
-                    Label("Page1", systemImage: "1.circle")
+                    Label("トレーニング記録", systemImage: "timer")
                 }
                 .tag(1)
 
             HistoryView()
                 .tabItem {
-                    Label("Page2", systemImage: "2.circle")
+                    Label("カレンダー", systemImage: "calendar")
                 }
                 .tag(2)
 
-            AnalysisView()
+            TrendView()
                 .tabItem {
-                    Label("Page3", systemImage: "3.circle")
+                    Label("トレンド", systemImage: "chart.bar.fill")
                 }
                 .tag(3)
         }
