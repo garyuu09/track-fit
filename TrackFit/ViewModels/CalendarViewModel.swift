@@ -25,4 +25,13 @@ class CalendarViewModel: ObservableObject {
         }
         isLoading = false
     }
+
+    /// 新規イベントを追加する
+    func createEvent() async {
+
+    }
+    /// 既存イベントを更新する
+    func updateEvent() async {
+
+    }
 }
