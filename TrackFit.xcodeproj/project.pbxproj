@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D6E738792D1E7FFB00AC5E87 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D6E738782D1E7FFB00AC5E87 /* GoogleSignIn */; };
 		D6E7387B2D1E7FFB00AC5E87 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D6E7387A2D1E7FFB00AC5E87 /* GoogleSignInSwift */; };
+		D6E739A62D250A5600AC5E87 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		D6E738422D11C84900AC5E87 /* TrackFit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrackFit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6E738542D11C84A00AC5E87 /* TrackFitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackFitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6E7385E2D11C84A00AC5E87 /* TrackFitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrackFitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -95,6 +97,7 @@
 		D6E738392D11C84900AC5E87 = {
 			isa = PBXGroup;
 			children = (
+				D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */,
 				D6E738442D11C84900AC5E87 /* TrackFit */,
 				D6E738572D11C84A00AC5E87 /* TrackFitTests */,
 				D6E738612D11C84A00AC5E87 /* TrackFitUITests */,
@@ -237,6 +240,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6E739A62D250A5600AC5E87 /* Secrets.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,6 +300,7 @@
 /* Begin XCBuildConfiguration section */
 		D6E738662D11C84A00AC5E87 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -359,6 +364,7 @@
 		};
 		D6E738672D11C84A00AC5E87 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -415,6 +421,7 @@
 		};
 		D6E738692D11C84A00AC5E87 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -445,6 +452,7 @@
 		};
 		D6E7386A2D11C84A00AC5E87 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D6E739A52D250A5600AC5E87 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
