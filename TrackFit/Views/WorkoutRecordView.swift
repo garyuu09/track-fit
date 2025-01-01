@@ -109,32 +109,41 @@ struct WorkoutRecordView: View {
                             if expandedDailyIDs.contains(daily.id) {
                                 Divider()
 
-                                // トレーニング一覧（要約表示）
-                                ForEach(daily.records) { record in
-                                    Text(
-                                        "\(record.exerciseName) "
-                                        + "\(Int(record.weight))kg x "
-                                        + "\(record.reps)回 x "
-                                        + "\(record.sets)セット"
-                                    )
-                                    .font(.subheadline)
+                                // Grid全体で左寄せ
+                                Grid(alignment: .leading) {
+                                    // レコードごとに行を作成
+                                    ForEach(daily.records) { record in
+                                        GridRow {
+                                            Text(record.exerciseName)
+                                            Text("\(Int(record.weight))kg")
+                                            Text("x")
+                                            Text("\(record.reps)回")
+                                            Text("x")
+                                            Text("\(record.sets)セット")
+                                        }
+                                        .font(.caption)
+                                    }
                                 }
 
                                 // 下端にボタンを2つ並べる
+                                // --- トレーニング記録を追加ボタン (見た目を改善) ---
                                 HStack {
                                     Spacer()
-                                    // トレーニング記録を追加(管理) → NavigationLink に変更
                                     NavigationLink {
                                         // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
                                         WorkoutSheetView(daily: $daily)
                                     } label: {
-                                        Label("トレーニング記録を追加", systemImage: "plus.circle.fill")
-                                            .font(.footnote)
-                                            .foregroundColor(.white)
-                                            .padding(.vertical, 6)
-                                            .padding(.horizontal, 10)
-                                            .background(Color.green)
-                                            .cornerRadius(8)
+                                        HStack(spacing: 5) {
+                                            Image(systemName: "plus.circle.fill")
+                                            Text("トレーニング記録を追加")
+                                        }
+                                        .font(.footnote)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 10)
+                                        // 好みでカラーやcornerRadiusを調整
+                                        .background(Color.blue)
+                                        .cornerRadius(8)
                                     }
                                 }
                                 .padding(.top, 8)
@@ -143,9 +152,22 @@ struct WorkoutRecordView: View {
                         .padding(.vertical, 8)
                     }
                 }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            // 新規の日付を追加する例
+                            let newDaily = DailyWorkout(date: Date(), records: [])
+                            dailyWorkouts.append(newDaily)
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                    }
+                }
                 .navigationTitle("トレーニング一覧")
                 .navigationBarTitleDisplayMode(.inline)
             }
+            // --- 新しい「日付(DailyWorkout)」を追加するボタンをtoolbarに配置 ---
+
             .searchable(text: $searchText)
             // 丸い追加ボタン（下部固定）
             .safeAreaInset(edge: .bottom, alignment: .center) {
