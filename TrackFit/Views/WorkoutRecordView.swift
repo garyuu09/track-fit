@@ -57,54 +57,58 @@ struct WorkoutRecordView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             // 上段: 三角アイコン + 日付 + Googleカレンダー反映ボタン
                             HStack {
-                                // 展開状態でアイコンを切り替え(▼ or ▶)
-                                let isExpanded = expandedDailyIDs.contains(daily.id)
-                                Image(systemName: isExpanded ? "triangle.fill" : "triangle")
-                                    .rotationEffect(Angle(degrees: isExpanded ? 0 : 90))
-                                    .foregroundColor(.gray)
+                                NavigationLink {
+                                    // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
+                                    WorkoutSheetView(daily: $daily)
+                                } label: {
+                                    // 展開状態でアイコンを切り替え(▼ or ▶)
+                                    let isExpanded = expandedDailyIDs.contains(daily.id)
+                                    Image(systemName: isExpanded ? "triangle.fill" : "triangle")
+                                        .rotationEffect(Angle(degrees: isExpanded ? 0 : 90))
+                                        .foregroundColor(.gray)
 
-                                // 日付テキスト
-                                Text(formattedDate(daily.date))
-                                    .font(.headline)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            toggleExpanded(daily.id)
+                                    // 日付テキスト
+                                    Text(formattedDate(daily.date))
+                                        .font(.headline)
+                                        .onTapGesture {
+                                            withAnimation {
+                                                toggleExpanded(daily.id)
+                                            }
+                                        }
+
+                                    Spacer()
+
+                                    // Googleカレンダー連携ボタン
+                                    Button(action: {
+                                        daily.isSyncedToCalendar.toggle()
+                                    }) {
+                                        if daily.isSyncedToCalendar {
+                                            // 連携済み
+                                            Label("連携済み", systemImage: "calendar.badge.checkmark")
+                                                .font(.footnote)
+                                                .foregroundColor(.green)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.green, lineWidth: 1)
+                                                )
+                                        } else {
+                                            // 未連携
+                                            Label("連携", systemImage: "calendar.badge.plus")
+                                                .font(.footnote)
+                                                .foregroundColor(.blue)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.blue, lineWidth: 1)
+                                                )
                                         }
                                     }
-
-                                Spacer()
-
-                                // Googleカレンダー連携ボタン
-                                Button(action: {
-                                    daily.isSyncedToCalendar.toggle()
-                                }) {
-                                    if daily.isSyncedToCalendar {
-                                        // 連携済み
-                                        Label("連携済み", systemImage: "calendar.badge.checkmark")
-                                            .font(.footnote)
-                                            .foregroundColor(.green)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.green, lineWidth: 1)
-                                            )
-                                    } else {
-                                        // 未連携
-                                        Label("連携", systemImage: "calendar.badge.plus")
-                                            .font(.footnote)
-                                            .foregroundColor(.blue)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.blue, lineWidth: 1)
-                                            )
-                                    }
+                                    .buttonStyle(BorderlessButtonStyle())
                                 }
-                                .buttonStyle(BorderlessButtonStyle())
                             }
-
                             // 折り畳み領域: 日付が展開されている場合だけ表示
                             if expandedDailyIDs.contains(daily.id) {
                                 Divider()
@@ -124,29 +128,6 @@ struct WorkoutRecordView: View {
                                         .font(.caption)
                                     }
                                 }
-
-                                // 下端にボタンを2つ並べる
-                                // --- トレーニング記録を追加ボタン (見た目を改善) ---
-                                HStack {
-                                    Spacer()
-                                    NavigationLink {
-                                        // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
-                                        WorkoutSheetView(daily: $daily)
-                                    } label: {
-                                        HStack(spacing: 5) {
-                                            Image(systemName: "plus.circle.fill")
-                                            Text("トレーニング記録を追加")
-                                        }
-                                        .font(.footnote)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 6)
-                                        .padding(.horizontal, 10)
-                                        // 好みでカラーやcornerRadiusを調整
-                                        .background(Color.blue)
-                                        .cornerRadius(8)
-                                    }
-                                }
-                                .padding(.top, 8)
                             }
                         }
                         .padding(.vertical, 8)
