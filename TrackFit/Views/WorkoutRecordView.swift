@@ -68,7 +68,7 @@ struct WorkoutRecordView: View {
                                         .foregroundColor(.gray)
 
                                     // 日付テキスト
-                                    Text(formattedDate(daily.date))
+                                    Text(formattedDate(date: daily.date))
                                         .font(.headline)
                                         .onTapGesture {
                                             withAnimation {
@@ -190,10 +190,12 @@ struct WorkoutRecordView: View {
         }
     }
 
-    // 日付フォーマット
-    private func formattedDate(_ date: Date) -> String {
+    /// Date を "yyyy/MM/dd" 形式の文字列に変換する関数
+    private func formattedDate(date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy/MM/dd"
+        formatter.calendar = Calendar(identifier: .gregorian) // 西暦を使う
+        formatter.locale = Locale(identifier: "ja_JP")        // 日本語ロケール
+        formatter.dateFormat = "yyyy/MM/dd"                   // 表示形式
         return formatter.string(from: date)
     }
 }
