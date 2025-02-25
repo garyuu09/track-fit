@@ -145,11 +145,9 @@ struct WorkoutRecordView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
-                            // 新規の日付を追加する例
-                            let newDaily = DailyWorkout(date: Date(), records: [])
-                            dailyWorkouts.append(newDaily)
+                            // TODO: 設定画面へ遷移させる
                         }) {
-                            Image(systemName: "plus.circle.fill")
+                            Image(systemName: "gearshape.fill")
                         }
                     }
                 }
