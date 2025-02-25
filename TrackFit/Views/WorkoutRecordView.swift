@@ -46,6 +46,15 @@ struct WorkoutRecordView: View {
 
     @State private var searchText: String = ""
 
+    // シートの表示・非表示を管理するフラグ
+    @State private var showDatePickerSheet = false
+
+    @State var showDatePicker: Bool = false
+    @State var savedDate: Date? = nil
+
+    // 選択した日付
+    @State private var selectedDate = Date()
+
     var body: some View {
         ZStack {
             NavigationStack {
@@ -146,37 +155,69 @@ struct WorkoutRecordView: View {
                 }
                 .navigationTitle("トレーニング一覧")
                 .navigationBarTitleDisplayMode(.inline)
-            }
-            // --- 新しい「日付(DailyWorkout)」を追加するボタンをtoolbarに配置 ---
+                // 丸い追加ボタン（下部固定）
+                .safeAreaInset(edge: .bottom, alignment: .center) {
+                    Button(action: {
+                        // シートを表示させる
+                        showDatePicker = true
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
 
-            .searchable(text: $searchText)
-            // 丸い追加ボタン（下部固定）
-            .safeAreaInset(edge: .bottom, alignment: .center) {
-                Button(action: {
-                    // 新規の日付を追加するなどの処理 (例)
-                    let newDaily = DailyWorkout(date: Date(), records: [])
-                    dailyWorkouts.append(newDaily)
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-
-                        Text("トレーニング日を追加")
-                            .fontWeight(.semibold)
+                            Text("トレーニング日を追加")
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.blue)
+                        .clipShape(Capsule())
+                        .shadow(color: Color.black.opacity(0.2),
+                                radius: 8, x: 0, y: 4)
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .clipShape(Capsule())
-                    .shadow(color: Color.black.opacity(0.2),
-                            radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+                    .zIndex(1)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
-                .zIndex(1)
+                // シートを表示するためのモディファイア
+                .sheet(isPresented: $showDatePickerSheet) {
+                    // シートの中身
+                    VStack(spacing: 20) {
+                        Text("トレーニング日を選択してください")
+                            .font(.headline)
+
+                        // 日付の選択を行うDatePicker
+                        DatePicker(
+                            "",
+                            selection: $selectedDate,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
+
+                        Button("完了") {
+                            // シートを閉じる
+                            showDatePickerSheet = false
+                        }
+                    }
+                    .presentationDetents([
+                      .height(300),
+                      .fraction(0.3)
+                    ])
+                    .padding()
+                }
+            }
+            if showDatePicker {
+                CustomDatePicker(
+                    showDatePicker: $showDatePicker,
+                    savedDate: $savedDate,
+                    dailyWorkouts: $dailyWorkouts,
+                    selectedDate: savedDate ?? Date()
+                )
+                .animation(.linear, value: savedDate)
+                .transition(.opacity)
             }
         }
     }
