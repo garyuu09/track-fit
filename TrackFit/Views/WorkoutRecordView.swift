@@ -344,6 +344,57 @@ struct EditWorkoutSheetView: View {
     }
 }
 
+struct CustomDatePicker: View {
+    @Binding var showDatePicker: Bool
+    @Binding var savedDate: Date?
+    @Binding var dailyWorkouts: [DailyWorkout]
+    @State var selectedDate: Date = Date()
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    showDatePicker = false
+                }
+            VStack {
+                DatePicker(
+                    "",
+                    selection: $selectedDate,
+                    displayedComponents: [.date]
+                )
+                .environment(\.locale, Locale(identifier: "ja_JP"))
+                .environment(\.calendar, Calendar(identifier: .gregorian))
+                .datePickerStyle(.graphical)
+                Divider()
+                HStack {
+                    Button("キャンセル") {
+                        showDatePicker = false
+                    }
+                    Spacer()
+                    Button("保存") {
+                        savedDate = selectedDate
+                        guard let savedDate else { return }
+                        showDatePicker = false
+                        // 新規の日付を追加するなどの処理 (例)
+                        let newDaily = DailyWorkout(date: savedDate, records: [])
+                        dailyWorkouts.append(newDaily)
+                    }
+                }
+                .padding(.vertical, 15)
+                .padding(.horizontal, 10)
+            }
+            .padding(.horizontal, 20)
+            .background(
+                Color.gray
+                    .cornerRadius(30)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
+
 // MARK: - ヘルパー
 fileprivate func dateFromString(_ string: String) -> Date {
     let formatter = DateFormatter()
