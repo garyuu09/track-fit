@@ -10,6 +10,7 @@ import GoogleSignIn
 import GoogleSignInSwift
 
 struct ContentView: View {
+    @Environment(\.colorScheme) var colorScheme
     // タブの選択項目を保持する
     @StateObject private var viewModel = CalendarViewModel()
     @State var selection = 1
