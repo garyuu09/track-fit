@@ -386,6 +386,8 @@ struct EditWorkoutSheetView: View {
 }
 
 struct CustomDatePicker: View {
+    @Environment(\.colorScheme) var colorScheme
+
     @Binding var showDatePicker: Bool
     @Binding var savedDate: Date?
     @Binding var dailyWorkouts: [DailyWorkout]
@@ -427,8 +429,7 @@ struct CustomDatePicker: View {
             }
             .padding(.horizontal, 20)
             .background(
-                Color.gray
-                    .cornerRadius(30)
+                colorScheme == .dark ? Color.black.cornerRadius(30) : Color.white.cornerRadius(30)
             )
             .padding(.horizontal, 20)
         }
