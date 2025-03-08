@@ -25,17 +25,23 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            HistoryView()
+            SettingView()
                 .tabItem {
-                    Label("カレンダー", systemImage: "calendar")
+                    Label("設定", systemImage: "gearshape")
                 }
-                .tag(2)
 
-            TrendView()
-                .tabItem {
-                    Label("トレンド", systemImage: "chart.bar.fill")
-                }
-                .tag(3)
+            //　TODO: 3/31リリース後にタブを追加して、機能開発する。
+//            HistoryView()
+//                .tabItem {
+//                    Label("カレンダー", systemImage: "calendar")
+//                }
+//                .tag(2)
+            //　TODO: 3/31リリース後にタブを追加して、機能開発する。
+//            TrendView()
+//                .tabItem {
+//                    Label("トレンド", systemImage: "chart.bar.fill")
+//                }
+//                .tag(3)
         }
     }
 }
