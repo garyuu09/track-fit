@@ -142,15 +142,6 @@ struct WorkoutRecordView: View {
                         .padding(.vertical, 8)
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            // TODO: 設定画面へ遷移させる
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                        }
-                    }
-                }
                 .navigationTitle("トレーニング一覧")
                 .navigationBarTitleDisplayMode(.inline)
                 // 丸い追加ボタン（下部固定）
