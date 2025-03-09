@@ -261,6 +261,8 @@ struct CardView: View {
 
 // MARK: - トレーニング管理画面 (NavigationStackでプッシュ遷移先)
 struct WorkoutSheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: WorkoutViewModel = .init()
     // 親画面から受け取ったDailyWorkoutをバインディングで持つ
     // これにより直接編集が可能で、戻った時に反映される
     @Binding var daily: DailyWorkout
@@ -300,6 +302,26 @@ struct WorkoutSheetView: View {
         }
         .navigationTitle("トレーニング管理")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true) // デフォルトの戻るボタンを隠す
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    // 戻るボタンが押されたときの任意の処理
+                    // イベントをGoogleカレンダーに登録する
+                    Task {
+                    await viewModel.createEvent()
+                    // TODO: 更新処理もここで行いたい。
+                    }
+                    // ビューを閉じる
+                    dismiss()
+                }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                }
+            }
+        }
         // 編集用のシート（簡易実装）
         .sheet(item: $editingRecord) { rec in
             EditWorkoutSheetView(
