@@ -57,7 +57,7 @@ struct WorkoutSheetView: View {
                     // 戻るボタンが押されたときの任意の処理
                     // イベントをGoogleカレンダーに登録する
                     Task {
-                    await viewModel.createEvent()
+                        await viewModel.createEvent(dailyWorkout: daily)
                     // TODO: 更新処理もここで行いたい。
                     }
                     // ビューを閉じる

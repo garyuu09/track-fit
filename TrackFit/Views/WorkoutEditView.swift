@@ -63,7 +63,7 @@ struct WorkoutEditView: View {
                         if isUpdateMode {
                             await viewModel.updateEvent()
                         } else {
-                            await viewModel.createEvent()
+//                            await viewModel.createEvent()
                         }
                     }
                 }

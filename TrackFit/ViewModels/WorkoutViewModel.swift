@@ -27,14 +27,12 @@ class WorkoutViewModel: ObservableObject {
     var accessToken: String = ""
 
     /// 新規イベント作成
-    func createEvent() async {
+    func createEvent(dailyWorkout: DailyWorkout) async {
         do {
             isLoading = true
             errorMessage = nil
 
-            let workoutData = WorkoutEventData(exerciseName: exerciseName, weight: weight, sets: sets, reps: reps, date: date)
-
-            let newId = try await GoogleCalendarAPI.createWorkoutEvent(accessToken: accessToken, workout: workoutData)
+            let newId = try await GoogleCalendarAPI.createWorkoutEvent(accessToken: tempAccessToken, workout: dailyWorkout)
 
             self.eventId = newId
 
