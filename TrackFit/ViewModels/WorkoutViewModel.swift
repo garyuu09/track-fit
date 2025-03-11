@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+// TODO: キーチェーンに保存する
+var tempAccessToken: String = ""
+
 @MainActor
 class WorkoutViewModel: ObservableObject {
     /// 画面で入力するプロパティ
