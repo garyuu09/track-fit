@@ -42,7 +42,7 @@ struct GoogleCalendarAPI {
     /// - Returns: 作成されたイベントの eventId
     static func createWorkoutEvent(
         accessToken: String,
-        workout: WorkoutEventData
+        workout: DailyWorkout
     ) async throws -> String {
 
         // 1) イベント開始・終了時刻をISO8601文字列に変換 (例: 1時間の枠を確保)
@@ -57,17 +57,23 @@ struct GoogleCalendarAPI {
         let endString = dateFormatter.string(from: endDate)
 
         // 2) イベントの要素をJSONに組み立て
+        // 各レコードの詳細を文字列に変換し、改行で結合
+        let descriptionText = workout.records.map { record in
+            """
+            種目: \(record.exerciseName)
+            重量: \(record.weight) kg
+            セット数: \(record.sets)
+            回数: \(record.reps)
+            """
+        }.joined(separator: "\n\n")
+
+        // イベント作成用のリクエストボディにまとめる
         //   - summary: イベントのタイトル
         //   - description: メモ欄 (種目・重量・セット数・回数などをここに記載)
         //   - start/end: ISO8601形式の日付
         let newEventRequestBody: [String: Any] = [
-            "summary": "トレーニング: \(workout.exerciseName)",
-            "description": """
-                種目: \(workout.exerciseName)
-                重量: \(workout.weight) kg
-                セット数: \(workout.sets)
-                回数: \(workout.reps)
-                """,
+            "summary": "トレーニング",
+            "description": descriptionText,
             "start": [
                 "dateTime": startString,
                 "timeZone": "UTC"

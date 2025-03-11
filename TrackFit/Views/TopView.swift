@@ -53,6 +53,8 @@ struct TopView: View {
                     print("ログイン成功!")
                     print("idToken: \(idToken ?? "")")
                     print("accessToken: \(accessToken)")
+                    // TODO: キーチェーンに保存する
+                    tempAccessToken = accessToken ?? ""
 
                 } catch {
                     print("ログインエラー: \(error.localizedDescription)")
