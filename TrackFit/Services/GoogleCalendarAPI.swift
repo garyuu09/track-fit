@@ -49,12 +49,8 @@ struct GoogleCalendarAPI {
         //   ここでは簡易的に「開始=ユーザー選択のDate」「終了=+1時間」として例示します
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0) // UTC
-        let startString = dateFormatter.string(from: workout.date)
-
-        guard let endDate = Calendar.current.date(byAdding: .hour, value: 1, to: workout.date) else {
-            throw URLError(.badURL)
-        }
-        let endString = dateFormatter.string(from: endDate)
+        let startString = dateFormatter.string(from: workout.startDate)
+        let endString = dateFormatter.string(from: workout.endDate)
 
         // 2) イベントの要素をJSONに組み立て
         // 各レコードの詳細を文字列に変換し、改行で結合

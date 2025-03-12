@@ -16,11 +16,8 @@ struct WorkoutSheetView: View {
     @Binding var daily: DailyWorkout
 
     @State private var editingRecord: WorkoutRecord? = nil
-
     @State private var isStartSheetPresented = false
     @State private var isEndSheetPresented = false
-    @State private var startDate = Date()
-    @State private var endDate = Date()
 
     // 2カラムのレイアウトでカード表示
     private let columns = [
@@ -38,14 +35,14 @@ struct WorkoutSheetView: View {
                     HStack {
                         Text("開始日時")
                         Spacer()
-                        Text("\(startDate, style: .date) \(startDate, style: .time)")
+                        Text("\(daily.startDate, style: .date) \(daily.startDate, style: .time)")
                             .foregroundColor(.secondary)
                     }
                 }
                 .sheet(isPresented: $isStartSheetPresented) {
                     DatePickerSheet(
                         title: "開始日時を設定",
-                        date: $startDate
+                        date: $daily.startDate
                     )
                     .presentationDetents([.fraction(0.4)])
                 }
@@ -56,14 +53,14 @@ struct WorkoutSheetView: View {
                     HStack {
                         Text("終了日時")
                         Spacer()
-                        Text("\(endDate, style: .date) \(endDate, style: .time)")
+                        Text("\(daily.endDate, style: .date) \(daily.endDate, style: .time)")
                             .foregroundColor(.secondary)
                     }
                 }
                 .sheet(isPresented: $isEndSheetPresented) {
                     DatePickerSheet(
                         title: "終了日時を設定",
-                        date: $endDate
+                        date: $daily.endDate
                     )
                     .presentationDetents([.fraction(0.4)])
                 }
@@ -84,7 +81,7 @@ struct WorkoutSheetView: View {
                     }
                 }
                 Spacer()
-                    .frame(height: .infinity)
+
                 .padding()
             }
 
@@ -142,6 +139,12 @@ struct WorkoutSheetView: View {
                 }
             )
         }
+//        .onChange(of: startDate) { newValue in
+//            daily.startDate = newValue
+//        }
+//        .onChange(of: endDate) { newValue in
+//            daily.endDate = newValue
+//        }
     }
 }
 
@@ -251,7 +254,8 @@ struct DatePickerSheet: View {
 
 #Preview {
     @Previewable @State var dailyWorkout: DailyWorkout = DailyWorkout(
-        date:  Date(),
+        startDate: Date(),
+        endDate: Date().addingTimeInterval(60 * 60), // 現在日付+60分
         records: [
             WorkoutRecord(exerciseName: "ベンチプレス", weight: 50.0, reps: 10, sets: 3),
             WorkoutRecord(exerciseName: "スクワット",   weight: 70.0, reps: 8,  sets: 3),

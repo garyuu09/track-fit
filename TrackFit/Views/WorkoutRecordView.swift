@@ -12,7 +12,8 @@ struct WorkoutRecord: Identifiable {
 // MARK: - 1日分のトレーニング記録
 struct DailyWorkout: Identifiable {
     let id = UUID()
-    let date: Date
+    var startDate: Date
+    var endDate: Date
 
     // その日実施したトレーニング一覧
     var records: [WorkoutRecord]
@@ -23,23 +24,7 @@ struct DailyWorkout: Identifiable {
 
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
-    @State private var dailyWorkouts: [DailyWorkout] = [
-        DailyWorkout(
-            date: dateFromString("2024/12/31"),
-            records: [
-                WorkoutRecord(exerciseName: "ベンチプレス", weight: 50.0, reps: 10, sets: 3),
-                WorkoutRecord(exerciseName: "スクワット",   weight: 70.0, reps: 8,  sets: 3),
-                WorkoutRecord(exerciseName: "デッドリフト", weight: 80.0, reps: 5,  sets: 2)
-            ]
-        ),
-        DailyWorkout(
-            date: dateFromString("2025/01/01"),
-            records: [
-                WorkoutRecord(exerciseName: "プルアップ",        weight: 0.0,  reps: 10, sets: 3),
-                WorkoutRecord(exerciseName: "ショルダープレス", weight: 30.0, reps: 8,  sets: 3)
-            ]
-        )
-    ]
+    @State private var dailyWorkouts: [DailyWorkout] = []
 
     /// アコーディオンが展開されている日付(DailyWorkout)の id を管理
     @State private var expandedDailyIDs: Set<UUID> = []
@@ -77,7 +62,7 @@ struct WorkoutRecordView: View {
                                         .foregroundColor(.gray)
 
                                     // 日付テキスト
-                                    Text(formattedDate(date: daily.date))
+                                    Text(formattedDate(date: daily.startDate))
                                         .font(.headline)
                                         .onTapGesture {
                                             withAnimation {
@@ -265,7 +250,7 @@ struct CustomDatePicker: View {
                         guard let savedDate else { return }
                         showDatePicker = false
                         // 新規の日付を追加するなどの処理 (例)
-                        let newDaily = DailyWorkout(date: savedDate, records: [])
+                        let newDaily = DailyWorkout(startDate: savedDate,endDate: savedDate.addingTimeInterval(60 * 60), records: [])
                         dailyWorkouts.append(newDaily)
                     }
                 }
