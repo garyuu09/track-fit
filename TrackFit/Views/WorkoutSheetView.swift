@@ -16,6 +16,8 @@ struct WorkoutSheetView: View {
     @Binding var daily: DailyWorkout
 
     @State private var editingRecord: WorkoutRecord? = nil
+    @State private var isStartSheetPresented = false
+    @State private var isEndSheetPresented = false
 
     // 2カラムのレイアウトでカード表示
     private let columns = [
@@ -24,30 +26,78 @@ struct WorkoutSheetView: View {
     ]
 
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
-                // ForEachに直接$daily.records.indicesを渡すと、バインドしやすい
-                ForEach($daily.records.indices, id: \.self) { index in
-                    let record = daily.records[index]
-                    CardView(record: record)
-                        .onTapGesture {
-                            editingRecord = record
-                        }
+        VStack {
+        Form {
+            Section(header: Text("トレーニング日時")) {
+                Button(action: {
+                    isStartSheetPresented = true
+                }) {
+                    HStack {
+                        Text("開始日時")
+                        Spacer()
+                        Text("\(daily.startDate, style: .date) \(daily.startDate, style: .time)")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .sheet(isPresented: $isStartSheetPresented) {
+                    DatePickerSheet(
+                        title: "開始日時を設定",
+                        date: $daily.startDate
+                    )
+                    .presentationDetents([.fraction(0.4)])
+                }
+
+                Button(action: {
+                    isEndSheetPresented = true
+                }) {
+                    HStack {
+                        Text("終了日時")
+                        Spacer()
+                        Text("\(daily.endDate, style: .date) \(daily.endDate, style: .time)")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .sheet(isPresented: $isEndSheetPresented) {
+                    DatePickerSheet(
+                        title: "終了日時を設定",
+                        date: $daily.endDate
+                    )
+                    .presentationDetents([.fraction(0.4)])
                 }
             }
-            .padding()
-        }
-        // 新規トレーニングを追加ボタン
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    let newRecord = WorkoutRecord(exerciseName: "新種目", weight: 10, reps: 10, sets: 3)
-                    daily.records.append(newRecord)
-                } label: {
-                    Label("追加", systemImage: "plus.circle.fill")
-                }
+            Section(header: Text("種目情報入力")) {
             }
         }
+    .frame(height: 190)
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    // ForEachに直接$daily.records.indicesを渡すと、バインドしやすい
+                    ForEach($daily.records.indices, id: \.self) { index in
+                        let record = daily.records[index]
+                        CardView(record: record)
+                            .onTapGesture {
+                                editingRecord = record
+                            }
+                    }
+                }
+                Spacer()
+
+                .padding()
+            }
+
+            // 新規トレーニングを追加ボタン
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        let newRecord = WorkoutRecord(exerciseName: "新種目", weight: 10, reps: 10, sets: 3)
+                        daily.records.append(newRecord)
+                    } label: {
+                        Label("追加", systemImage: "plus.circle.fill")
+                    }
+                }
+            }
+        Spacer()
+    }
         .navigationTitle("トレーニング管理")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true) // デフォルトの戻るボタンを隠す
@@ -89,6 +139,12 @@ struct WorkoutSheetView: View {
                 }
             )
         }
+//        .onChange(of: startDate) { newValue in
+//            daily.startDate = newValue
+//        }
+//        .onChange(of: endDate) { newValue in
+//            daily.endDate = newValue
+//        }
     }
 }
 
@@ -172,9 +228,34 @@ struct EditWorkoutSheetView: View {
         }
     }
 }
+
+
+struct DatePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    @Binding var date: Date
+
+    var body: some View {
+        NavigationView {
+            VStack {
+                DatePicker(title, selection: $date, displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .padding()
+                Spacer()
+            }
+            .navigationBarTitle(Text(title), displayMode: .inline)
+            .navigationBarItems(trailing: Button("閉じる") {
+                dismiss()
+            })
+        }
+    }
+}
+
 #Preview {
     @Previewable @State var dailyWorkout: DailyWorkout = DailyWorkout(
-        date:  Date(),
+        startDate: Date(),
+        endDate: Date().addingTimeInterval(60 * 60), // 現在日付+60分
         records: [
             WorkoutRecord(exerciseName: "ベンチプレス", weight: 50.0, reps: 10, sets: 3),
             WorkoutRecord(exerciseName: "スクワット",   weight: 70.0, reps: 8,  sets: 3),
