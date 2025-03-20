@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// TODO: キーチェーンに保存する
-var tempAccessToken: String = ""
-
 @MainActor
 class WorkoutViewModel: ObservableObject {
     /// 画面で入力するプロパティ
@@ -35,7 +32,8 @@ class WorkoutViewModel: ObservableObject {
             isLoading = true
             errorMessage = nil
 
-            let newId = try await GoogleCalendarAPI.createWorkoutEvent(accessToken: tempAccessToken, workout: dailyWorkout)
+            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken")!
+            let newId = try await GoogleCalendarAPI.createWorkoutEvent(accessToken: accessToken, workout: dailyWorkout)
 
             self.eventId = newId
 
