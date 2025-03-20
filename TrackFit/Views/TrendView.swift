@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct TrendView: View {
-    var body: some View {
-        Text("TrendView")
-    }
+  var body: some View {
+    Text("TrendView")
+  }
 }
 
 #Preview {
-    TrendView()
+  TrendView()
 }
