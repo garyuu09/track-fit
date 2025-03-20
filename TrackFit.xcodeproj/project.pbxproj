@@ -122,6 +122,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D6E738682D11C84A00AC5E87 /* Build configuration list for PBXNativeTarget "TrackFit" */;
 			buildPhases = (
+				D65E72412D8BE18400F61298 /* ShellScript */,
 				D6E7383E2D11C84900AC5E87 /* Sources */,
 				D6E7383F2D11C84900AC5E87 /* Frameworks */,
 				D6E738402D11C84900AC5E87 /* Resources */,
@@ -260,6 +261,26 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D65E72412D8BE18400F61298 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# # フォーマットしたいフォルダを指定\nTARGET_DIR=\"$SRCROOT/TrackFit\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 15以降を使用してください。\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		D6E7383E2D11C84900AC5E87 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -336,7 +357,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -400,7 +421,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
