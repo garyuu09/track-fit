@@ -146,8 +146,9 @@ struct WorkoutRecordView: View {
                         .padding(.vertical, 12)
                         .background(Color.blue)
                         .clipShape(Capsule())
-                        .shadow(color: Color.black.opacity(0.2),
-                                radius: 8, x: 0, y: 4)
+                        .shadow(
+                            color: Color.black.opacity(0.2),
+                            radius: 8, x: 0, y: 4)
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 8)
@@ -174,8 +175,8 @@ struct WorkoutRecordView: View {
                         }
                     }
                     .presentationDetents([
-                      .height(300),
-                      .fraction(0.3)
+                        .height(300),
+                        .fraction(0.3),
                     ])
                     .padding()
                 }
@@ -205,9 +206,9 @@ struct WorkoutRecordView: View {
     /// Date を "yyyy/MM/dd" 形式の文字列に変換する関数
     private func formattedDate(date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian) // 西暦を使う
-        formatter.locale = Locale(identifier: "ja_JP")        // 日本語ロケール
-        formatter.dateFormat = "yyyy/MM/dd"                   // 表示形式
+        formatter.calendar = Calendar(identifier: .gregorian)  // 西暦を使う
+        formatter.locale = Locale(identifier: "ja_JP")  // 日本語ロケール
+        formatter.dateFormat = "yyyy/MM/dd"  // 表示形式
         return formatter.string(from: date)
     }
 }
@@ -247,7 +248,8 @@ struct CustomDatePicker: View {
                         guard let savedDate else { return }
                         showDatePicker = false
                         // 新規の日付を追加するなどの処理 (例)
-                        let newDaily = DailyWorkout(startDate: savedDate,endDate: savedDate.addingTimeInterval(60 * 60), records: [])
+                        let newDaily = DailyWorkout(
+                            startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60), records: [])
                         dailyWorkouts.append(newDaily)
                     }
                 }
@@ -263,9 +265,8 @@ struct CustomDatePicker: View {
     }
 }
 
-
 // MARK: - ヘルパー
-fileprivate func dateFromString(_ string: String) -> Date {
+private func dateFromString(_ string: String) -> Date {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy/MM/dd"
     return formatter.date(from: string) ?? Date()

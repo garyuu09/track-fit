@@ -55,7 +55,8 @@ class WorkoutViewModel: ObservableObject {
             isLoading = true
             errorMessage = nil
 
-            let workoutData = WorkoutEventData(exerciseName: exerciseName, weight: weight, sets: sets, reps: reps, date: date)
+            let workoutData = WorkoutEventData(
+                exerciseName: exerciseName, weight: weight, sets: sets, reps: reps, date: date)
 
             try await GoogleCalendarAPI.updateWorkoutEvent(accessToken: accessToken, eventId: eid, workout: workoutData)
         } catch {

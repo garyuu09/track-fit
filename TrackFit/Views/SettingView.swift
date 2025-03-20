@@ -5,9 +5,9 @@
 //  Created by Ryuga on 2025/03/08.
 //
 
-import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
+import SwiftUI
 
 struct SettingView: View {
     @State private var isGoogleCalendarLinked: Bool = false
@@ -68,7 +68,8 @@ struct SettingView: View {
     func loadLinkedStatus() {
         // ※ここではUserDefaultsを使った例です。実際はセキュアなキーチェーンへの保存を検討してください。
         if let savedToken = UserDefaults.standard.string(forKey: "GoogleAccessToken"),
-           let savedEmail = UserDefaults.standard.string(forKey: "GoogleEmail") {
+            let savedEmail = UserDefaults.standard.string(forKey: "GoogleEmail")
+        {
             self.accessToken = savedToken
             self.isGoogleCalendarLinked = true
             self.linkedAccountEmail = savedEmail
@@ -93,7 +94,7 @@ struct SettingView: View {
 
                 // 3. presenting用のrootViewControllerを取得（SceneDelegate利用の場合）
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                      let rootViewController = windowScene.windows.first?.rootViewController
+                    let rootViewController = windowScene.windows.first?.rootViewController
                 else {
                     return
                 }
@@ -104,7 +105,7 @@ struct SettingView: View {
                     hint: nil,
                     additionalScopes: [
                         "https://www.googleapis.com/auth/calendar.readonly",
-                        "https://www.googleapis.com/auth/calendar.events"
+                        "https://www.googleapis.com/auth/calendar.events",
                     ]
                 )
 
