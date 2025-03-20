@@ -43,9 +43,6 @@ struct WorkoutRecordView: View {
   var body: some View {
     ZStack {
       NavigationStack {
-        TopView()  // 何かの上部ビュー(サンプル)
-          .frame(width: 300)
-
         List {
           ForEach($dailyWorkouts) { $daily in
             VStack(alignment: .leading, spacing: 8) {
