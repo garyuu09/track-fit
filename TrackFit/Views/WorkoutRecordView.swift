@@ -157,6 +157,16 @@ struct WorkoutRecordView: View {
           .padding(.bottom, 8)
           .zIndex(1)
         }
+        .overlay {
+          if dailyWorkouts.isEmpty {
+            /// はじめての利用（まだ一度も記録がない場合）
+            ContentUnavailableView(
+              "トレーニング記録がありません",
+              systemImage: "figure.run",
+              description: Text("初めてのトレーニングを記録してみましょう！")
+            )
+          }
+        }
         // シートを表示するためのモディファイア
         .sheet(isPresented: $showDatePickerSheet) {
           // シートの中身
