@@ -1,27 +1,5 @@
 import SwiftUI
 
-// MARK: - 個別のトレーニング記録モデル
-struct WorkoutRecord: Identifiable {
-  let id = UUID()
-  var exerciseName: String
-  var weight: Double
-  var reps: Int
-  var sets: Int
-}
-
-// MARK: - 1日分のトレーニング記録
-struct DailyWorkout: Identifiable {
-  let id = UUID()
-  var startDate: Date
-  var endDate: Date
-
-  // その日実施したトレーニング一覧
-  var records: [WorkoutRecord]
-
-  // Googleカレンダー連携済みかどうか
-  var isSyncedToCalendar: Bool = false
-}
-
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
   @State private var dailyWorkouts: [DailyWorkout] = []
