@@ -9,13 +9,13 @@ import Foundation
 
 // MARK: - 1日分のトレーニング記録
 struct DailyWorkout: Identifiable {
-  let id = UUID()
-  var startDate: Date
-  var endDate: Date
+    let id = UUID()
+    var startDate: Date
+    var endDate: Date
 
-  // その日実施したトレーニング一覧
-  var records: [WorkoutRecord]
+    // その日実施したトレーニング一覧
+    var records: [WorkoutRecord]
 
-  // Googleカレンダー連携済みかどうか
-  var isSyncedToCalendar: Bool = false
+    // Googleカレンダー連携済みかどうか
+    var isSyncedToCalendar: Bool = false
 }
