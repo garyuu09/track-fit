@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import SwiftData
 
 // MARK: - 1日分のトレーニング記録
-struct DailyWorkout: Identifiable {
-    let id = UUID()
+@Model
+class DailyWorkout: Identifiable {
+    var id = UUID()
     var startDate: Date
     var endDate: Date
 
@@ -18,4 +20,11 @@ struct DailyWorkout: Identifiable {
 
     // Googleカレンダー連携済みかどうか
     var isSyncedToCalendar: Bool = false
+
+    init(startDate: Date, endDate: Date, records: [WorkoutRecord], isSyncedToCalendar: Bool) {
+        self.startDate = startDate
+        self.endDate = endDate
+        self.records = records
+        self.isSyncedToCalendar = isSyncedToCalendar
+    }
 }

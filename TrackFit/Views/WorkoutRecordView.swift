@@ -1,8 +1,9 @@
+import SwiftData
 import SwiftUI
 
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
-    @State private var dailyWorkouts: [DailyWorkout] = []
+    @Query private var dailyWorkouts: [DailyWorkout] = []
 
     /// アコーディオンが展開されている日付(DailyWorkout)の id を管理
     @State private var expandedDailyIDs: Set<UUID> = []
@@ -15,6 +16,7 @@ struct WorkoutRecordView: View {
     @State var showDatePicker: Bool = false
     @State var savedDate: Date? = nil
 
+    @Environment(\.modelContext) private var context
     // 選択した日付
     @State private var selectedDate = Date()
 
@@ -22,13 +24,13 @@ struct WorkoutRecordView: View {
         ZStack {
             NavigationStack {
                 List {
-                    ForEach($dailyWorkouts) { $daily in
+                    ForEach(dailyWorkouts) { daily in
                         VStack(alignment: .leading, spacing: 8) {
                             // 上段: 三角アイコン + 日付 + Googleカレンダー反映ボタン
                             HStack {
                                 NavigationLink {
                                     // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
-                                    WorkoutSheetView(daily: $daily)
+                                    WorkoutSheetView(daily: daily)
                                 } label: {
                                     // 展開状態でアイコンを切り替え(▼ or ▶)
                                     let isExpanded = expandedDailyIDs.contains(daily.id)
@@ -171,9 +173,10 @@ struct WorkoutRecordView: View {
             }
             if showDatePicker {
                 CustomDatePicker(
+                    context: context,
                     showDatePicker: $showDatePicker,
                     savedDate: $savedDate,
-                    dailyWorkouts: $dailyWorkouts,
+                    dailyWorkouts: dailyWorkouts,
                     selectedDate: savedDate ?? Date()
                 )
                 .animation(.linear, value: savedDate)
@@ -204,9 +207,10 @@ struct WorkoutRecordView: View {
 struct CustomDatePicker: View {
     @Environment(\.colorScheme) var colorScheme
 
+    var context: ModelContext
     @Binding var showDatePicker: Bool
     @Binding var savedDate: Date?
-    @Binding var dailyWorkouts: [DailyWorkout]
+    var dailyWorkouts: [DailyWorkout]
     @State var selectedDate: Date = Date()
 
     var body: some View {
@@ -238,8 +242,8 @@ struct CustomDatePicker: View {
                         // 新規の日付を追加するなどの処理 (例)
                         let newDaily = DailyWorkout(
                             startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60),
-                            records: [])
-                        dailyWorkouts.append(newDaily)
+                            records: [], isSyncedToCalendar: true)
+                        context.insert(newDaily)
                     }
                 }
                 .padding(.vertical, 15)

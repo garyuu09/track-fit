@@ -32,7 +32,7 @@ class WorkoutViewModel: ObservableObject {
             isLoading = true
             errorMessage = nil
 
-            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken")!
+            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken") ?? ""
             let newId = try await GoogleCalendarAPI.createWorkoutEvent(
                 accessToken: accessToken, workout: dailyWorkout)
 

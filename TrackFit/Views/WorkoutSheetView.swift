@@ -5,6 +5,7 @@
 //  Created by Ryuga on 2025/03/09.
 //
 
+import SwiftData
 import SwiftUI
 
 // MARK: - トレーニング管理画面 (NavigationStackでプッシュ遷移先)
@@ -13,11 +14,13 @@ struct WorkoutSheetView: View {
     @StateObject private var viewModel: WorkoutViewModel = .init()
     // 親画面から受け取ったDailyWorkoutをバインディングで持つ
     // これにより直接編集が可能で、戻った時に反映される
-    @Binding var daily: DailyWorkout
+    @Bindable var daily: DailyWorkout
 
     @State private var editingRecord: WorkoutRecord? = nil
     @State private var isStartSheetPresented = false
     @State private var isEndSheetPresented = false
+
+    @Environment(\.modelContext) private var context
 
     // 2カラムのレイアウトでカード表示
     private let columns = [
@@ -74,7 +77,7 @@ struct WorkoutSheetView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 16) {
                     // ForEachに直接$daily.records.indicesを渡すと、バインドしやすい
-                    ForEach($daily.records.indices, id: \.self) { index in
+                    ForEach(daily.records.indices, id: \.self) { index in
                         let record = daily.records[index]
                         CardView(record: record)
                             .onTapGesture {
@@ -263,7 +266,8 @@ struct DatePickerSheet: View {
             WorkoutRecord(exerciseName: "ベンチプレス", weight: 50.0, reps: 10, sets: 3),
             WorkoutRecord(exerciseName: "スクワット", weight: 70.0, reps: 8, sets: 3),
             WorkoutRecord(exerciseName: "デッドリフト", weight: 80.0, reps: 5, sets: 2),
-        ]
+        ],
+        isSyncedToCalendar: true
     )
-    WorkoutSheetView(daily: $dailyWorkout)
+    WorkoutSheetView(daily: dailyWorkout)
 }
