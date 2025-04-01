@@ -277,7 +277,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# # フォーマットしたいフォルダを指定\nTARGET_DIR=\"$SRCROOT/TrackFit\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 15以降を使用してください。\"\nfi\n";
+			shellScript = "# # フォーマットしたいフォルダを指定\nTARGET_DIR=\"$SRCROOT/TrackFit\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\n  xcrun swift-format lint --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 15以降を使用してください。\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
