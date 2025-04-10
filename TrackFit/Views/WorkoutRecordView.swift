@@ -5,14 +5,9 @@ import SwiftUI
 struct WorkoutRecordView: View {
     @Query private var dailyWorkouts: [DailyWorkout] = []
 
-    /// アコーディオンが展開されている日付(DailyWorkout)の id を管理
-    @State private var expandedDailyIDs: Set<UUID> = []
-
     @State private var searchText: String = ""
-
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
-
     @State var showDatePicker: Bool = false
     @State var savedDate: Date? = nil
 
@@ -32,20 +27,9 @@ struct WorkoutRecordView: View {
                                     // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
                                     WorkoutSheetView(daily: daily)
                                 } label: {
-                                    // 展開状態でアイコンを切り替え(▼ or ▶)
-                                    let isExpanded = expandedDailyIDs.contains(daily.id)
-                                    Image(systemName: isExpanded ? "triangle.fill" : "triangle")
-                                        .rotationEffect(Angle(degrees: isExpanded ? 0 : 90))
-                                        .foregroundColor(.gray)
-
                                     // 日付テキスト
                                     Text(formattedDate(date: daily.startDate))
                                         .font(.headline)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                toggleExpanded(daily.id)
-                                            }
-                                        }
 
                                     Spacer()
 
@@ -80,24 +64,19 @@ struct WorkoutRecordView: View {
                                     .buttonStyle(BorderlessButtonStyle())
                                 }
                             }
-                            // 折り畳み領域: 日付が展開されている場合だけ表示
-                            if expandedDailyIDs.contains(daily.id) {
-                                Divider()
-
-                                // Grid全体で左寄せ
-                                Grid(alignment: .leading) {
-                                    // レコードごとに行を作成
-                                    ForEach(daily.records) { record in
-                                        GridRow {
-                                            Text(record.exerciseName)
-                                            Text("\(Int(record.weight))kg")
-                                            Text("x")
-                                            Text("\(record.reps)回")
-                                            Text("x")
-                                            Text("\(record.sets)セット")
-                                        }
-                                        .font(.caption)
+                            // Grid全体で左寄せ
+                            Grid(alignment: .leading) {
+                                // レコードごとに行を作成
+                                ForEach(daily.records) { record in
+                                    GridRow {
+                                        Text(record.exerciseName)
+                                        Text("\(Int(record.weight))kg")
+                                        Text("x")
+                                        Text("\(record.reps)回")
+                                        Text("x")
+                                        Text("\(record.sets)セット")
                                     }
+                                    .font(.caption)
                                 }
                             }
                         }
@@ -182,15 +161,6 @@ struct WorkoutRecordView: View {
                 .animation(.linear, value: savedDate)
                 .transition(.opacity)
             }
-        }
-    }
-
-    // 折り畳み/展開をトグルするヘルパーメソッド
-    private func toggleExpanded(_ id: UUID) {
-        if expandedDailyIDs.contains(id) {
-            expandedDailyIDs.remove(id)
-        } else {
-            expandedDailyIDs.insert(id)
         }
     }
 
