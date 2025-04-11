@@ -30,25 +30,31 @@ struct WorkoutRecordView: View {
 
                                     // Googleカレンダーとの連携状態
                                     if daily.isSyncedToCalendar {
-                                        Label("連携済み", systemImage: "calendar.badge.checkmark")
-                                            .font(.footnote)
-                                            .foregroundColor(.green)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.green, lineWidth: 1)
-                                            )
+                                        HStack(spacing: 15) {
+                                            Image(systemName: "calendar.badge.checkmark")
+                                            Text("連携済み")
+                                        }
+                                        .font(.footnote)
+                                        .foregroundColor(.green)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.green, lineWidth: 1)
+                                        )
                                     } else {
-                                        Label("未連携", systemImage: "calendar.badge.exclamationmark")
-                                            .font(.footnote)
-                                            .foregroundColor(.red)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.red, lineWidth: 1)
-                                            )
+                                        HStack(spacing: 15) {
+                                            Image(systemName: "calendar.badge.exclamationmark")
+                                            Text("未連携")
+                                        }
+                                        .font(.footnote)
+                                        .foregroundColor(.red)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.red, lineWidth: 1)
+                                        )
                                     }
                                 }
 
