@@ -76,8 +76,12 @@ struct WorkoutRecordView: View {
                             .padding(.vertical, 8)
                         }
                     }
+                    .onDelete(perform: deleteDailyWorkout)
                 }
                 .navigationTitle("トレーニング一覧")
+                .toolbar {
+                    EditButton()
+                }
                 // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
                     Button(action: {
@@ -154,6 +158,13 @@ struct WorkoutRecordView: View {
                 .animation(.linear, value: savedDate)
                 .transition(.opacity)
             }
+        }
+    }
+
+    private func deleteDailyWorkout(at offsets: IndexSet) {
+        for index in offsets {
+            let dailyWorkout = dailyWorkouts[index]
+            context.delete(dailyWorkout)
         }
     }
 
