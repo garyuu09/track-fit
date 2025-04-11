@@ -28,7 +28,7 @@ struct WorkoutRecordView: View {
 
                                     Spacer()
 
-                                    // Googleカレンダー連携ボタン
+                                    // Googleカレンダーとの連携状態
                                     if daily.isSyncedToCalendar {
                                         Label("連携済み", systemImage: "calendar.badge.checkmark")
                                             .font(.footnote)
@@ -40,14 +40,14 @@ struct WorkoutRecordView: View {
                                                     .stroke(Color.green, lineWidth: 1)
                                             )
                                     } else {
-                                        Label("連携", systemImage: "calendar.badge.plus")
+                                        Label("未連携", systemImage: "calendar.badge.exclamationmark")
                                             .font(.footnote)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.red)
                                             .padding(.horizontal, 8)
                                             .padding(.vertical, 4)
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.blue, lineWidth: 1)
+                                                    .stroke(Color.red, lineWidth: 1)
                                             )
                                     }
                                 }
