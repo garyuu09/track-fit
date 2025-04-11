@@ -5,14 +5,9 @@ import SwiftUI
 struct WorkoutRecordView: View {
     @Query private var dailyWorkouts: [DailyWorkout] = []
 
-    /// アコーディオンが展開されている日付(DailyWorkout)の id を管理
-    @State private var expandedDailyIDs: Set<UUID> = []
-
     @State private var searchText: String = ""
-
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
-
     @State var showDatePicker: Bool = false
     @State var savedDate: Date? = nil
 
@@ -25,68 +20,39 @@ struct WorkoutRecordView: View {
             NavigationStack {
                 List {
                     ForEach(dailyWorkouts) { daily in
-                        VStack(alignment: .leading, spacing: 8) {
-                            // 上段: 三角アイコン + 日付 + Googleカレンダー反映ボタン
-                            HStack {
-                                NavigationLink {
-                                    // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
-                                    WorkoutSheetView(daily: daily)
-                                } label: {
-                                    // 展開状態でアイコンを切り替え(▼ or ▶)
-                                    let isExpanded = expandedDailyIDs.contains(daily.id)
-                                    Image(systemName: isExpanded ? "triangle.fill" : "triangle")
-                                        .rotationEffect(Angle(degrees: isExpanded ? 0 : 90))
-                                        .foregroundColor(.gray)
-
-                                    // 日付テキスト
+                        NavigationLink(destination: WorkoutSheetView(daily: daily)) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
                                     Text(formattedDate(date: daily.startDate))
                                         .font(.headline)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                toggleExpanded(daily.id)
-                                            }
-                                        }
 
                                     Spacer()
 
                                     // Googleカレンダー連携ボタン
-                                    Button(action: {
-                                        daily.isSyncedToCalendar.toggle()
-                                    }) {
-                                        if daily.isSyncedToCalendar {
-                                            // 連携済み
-                                            Label("連携済み", systemImage: "calendar.badge.checkmark")
-                                                .font(.footnote)
-                                                .foregroundColor(.green)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.green, lineWidth: 1)
-                                                )
-                                        } else {
-                                            // 未連携
-                                            Label("連携", systemImage: "calendar.badge.plus")
-                                                .font(.footnote)
-                                                .foregroundColor(.blue)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.blue, lineWidth: 1)
-                                                )
-                                        }
+                                    if daily.isSyncedToCalendar {
+                                        Label("連携済み", systemImage: "calendar.badge.checkmark")
+                                            .font(.footnote)
+                                            .foregroundColor(.green)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.green, lineWidth: 1)
+                                            )
+                                    } else {
+                                        Label("連携", systemImage: "calendar.badge.plus")
+                                            .font(.footnote)
+                                            .foregroundColor(.blue)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.blue, lineWidth: 1)
+                                            )
                                     }
-                                    .buttonStyle(BorderlessButtonStyle())
                                 }
-                            }
-                            // 折り畳み領域: 日付が展開されている場合だけ表示
-                            if expandedDailyIDs.contains(daily.id) {
-                                Divider()
 
-                                // Grid全体で左寄せ
                                 Grid(alignment: .leading) {
-                                    // レコードごとに行を作成
                                     ForEach(daily.records) { record in
                                         GridRow {
                                             Text(record.exerciseName)
@@ -100,12 +66,12 @@ struct WorkoutRecordView: View {
                                     }
                                 }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
                     }
                 }
                 .navigationTitle("トレーニング一覧")
-                .navigationBarTitleDisplayMode(.inline)
                 // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
                     Button(action: {
@@ -182,15 +148,6 @@ struct WorkoutRecordView: View {
                 .animation(.linear, value: savedDate)
                 .transition(.opacity)
             }
-        }
-    }
-
-    // 折り畳み/展開をトグルするヘルパーメソッド
-    private func toggleExpanded(_ id: UUID) {
-        if expandedDailyIDs.contains(id) {
-            expandedDailyIDs.remove(id)
-        } else {
-            expandedDailyIDs.insert(id)
         }
     }
 
