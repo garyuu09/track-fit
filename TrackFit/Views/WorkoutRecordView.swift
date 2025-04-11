@@ -20,71 +20,58 @@ struct WorkoutRecordView: View {
             NavigationStack {
                 List {
                     ForEach(dailyWorkouts) { daily in
-                        VStack(alignment: .leading, spacing: 8) {
-                            // 上段: 三角アイコン + 日付 + Googleカレンダー反映ボタン
-                            HStack {
-                                NavigationLink {
-                                    // 遷移先 (WorkoutSheetView) にバインディングでDailyWorkoutを渡す
-                                    WorkoutSheetView(daily: daily)
-                                } label: {
-                                    // 日付テキスト
+                        NavigationLink(destination: WorkoutSheetView(daily: daily)) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
                                     Text(formattedDate(date: daily.startDate))
                                         .font(.headline)
 
                                     Spacer()
 
                                     // Googleカレンダー連携ボタン
-                                    Button(action: {
-                                        daily.isSyncedToCalendar.toggle()
-                                    }) {
-                                        if daily.isSyncedToCalendar {
-                                            // 連携済み
-                                            Label("連携済み", systemImage: "calendar.badge.checkmark")
-                                                .font(.footnote)
-                                                .foregroundColor(.green)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.green, lineWidth: 1)
-                                                )
-                                        } else {
-                                            // 未連携
-                                            Label("連携", systemImage: "calendar.badge.plus")
-                                                .font(.footnote)
-                                                .foregroundColor(.blue)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.blue, lineWidth: 1)
-                                                )
+                                    if daily.isSyncedToCalendar {
+                                        Label("連携済み", systemImage: "calendar.badge.checkmark")
+                                            .font(.footnote)
+                                            .foregroundColor(.green)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.green, lineWidth: 1)
+                                            )
+                                    } else {
+                                        Label("連携", systemImage: "calendar.badge.plus")
+                                            .font(.footnote)
+                                            .foregroundColor(.blue)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.blue, lineWidth: 1)
+                                            )
+                                    }
+                                }
+
+                                Grid(alignment: .leading) {
+                                    ForEach(daily.records) { record in
+                                        GridRow {
+                                            Text(record.exerciseName)
+                                            Text("\(Int(record.weight))kg")
+                                            Text("x")
+                                            Text("\(record.reps)回")
+                                            Text("x")
+                                            Text("\(record.sets)セット")
                                         }
+                                        .font(.caption)
                                     }
-                                    .buttonStyle(BorderlessButtonStyle())
                                 }
                             }
-                            // Grid全体で左寄せ
-                            Grid(alignment: .leading) {
-                                // レコードごとに行を作成
-                                ForEach(daily.records) { record in
-                                    GridRow {
-                                        Text(record.exerciseName)
-                                        Text("\(Int(record.weight))kg")
-                                        Text("x")
-                                        Text("\(record.reps)回")
-                                        Text("x")
-                                        Text("\(record.sets)セット")
-                                    }
-                                    .font(.caption)
-                                }
-                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 8)
                         }
-                        .padding(.vertical, 8)
                     }
                 }
                 .navigationTitle("トレーニング一覧")
-                .navigationBarTitleDisplayMode(.inline)
                 // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
                     Button(action: {
