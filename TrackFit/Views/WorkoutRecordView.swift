@@ -21,6 +21,29 @@ struct WorkoutRecordView: View {
     @State private var selectedDate = Date()
     @State private var selectedFilter: FilterType = .all
 
+    private var filteredWorkouts: [DailyWorkout] {
+        let calendar = Calendar.current
+        let now = Date()
+
+        switch selectedFilter {
+        case .all:
+            return dailyWorkouts
+        case .thisWeek:
+            guard let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start else {
+                return dailyWorkouts
+            }
+            return dailyWorkouts.filter { $0.startDate >= startOfWeek && $0.startDate <= now }
+        case .thisMonth:
+            guard let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start else {
+                return dailyWorkouts
+            }
+            return dailyWorkouts.filter { $0.startDate >= startOfMonth && $0.startDate <= now }
+        case .custom:
+            // 任意の条件（現時点ではすべて返す）
+            return dailyWorkouts
+        }
+    }
+
     var body: some View {
         ZStack {
             NavigationStack {
@@ -33,7 +56,7 @@ struct WorkoutRecordView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 List {
-                    ForEach(dailyWorkouts) { daily in
+                    ForEach(filteredWorkouts) { daily in
                         NavigationLink(destination: WorkoutSheetView(daily: daily)) {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
