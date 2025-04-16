@@ -3,6 +3,11 @@ import SwiftUI
 
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
+    enum FilterType: String, CaseIterable, Identifiable {
+        case all, thisWeek, thisMonth, custom
+        var id: String { self.rawValue }
+    }
+
     @Query private var dailyWorkouts: [DailyWorkout] = []
 
     @State private var searchText: String = ""
@@ -14,10 +19,19 @@ struct WorkoutRecordView: View {
     @Environment(\.modelContext) private var context
     // 選択した日付
     @State private var selectedDate = Date()
+    @State private var selectedFilter: FilterType = .all
 
     var body: some View {
         ZStack {
             NavigationStack {
+                Picker("期間フィルター", selection: $selectedFilter) {
+                    Text("全て").tag(FilterType.all)
+                    Text("今週").tag(FilterType.thisWeek)
+                    Text("今月").tag(FilterType.thisMonth)
+                    Text("カスタム").tag(FilterType.custom)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
                 List {
                     ForEach(dailyWorkouts) { daily in
                         NavigationLink(destination: WorkoutSheetView(daily: daily)) {
