@@ -15,11 +15,18 @@ struct WorkoutRecordView: View {
     @State private var showDatePickerSheet = false
     @State var showDatePicker: Bool = false
     @State var savedDate: Date? = nil
+    @State private var showCustomDateSheet = false
 
     @Environment(\.modelContext) private var context
     // 選択した日付
     @State private var selectedDate = Date()
     @State private var selectedFilter: FilterType = .all
+    @State private var customStartDate: Date = {
+        let now = Date()
+        return Calendar.current.date(byAdding: .month, value: -1, to: now) ?? now
+    }()
+    @State private var customEndDate: Date = Date()
+    @State private var customTabSelection: Int = 0
 
     private var filteredWorkouts: [DailyWorkout] {
         let calendar = Calendar.current
@@ -39,8 +46,23 @@ struct WorkoutRecordView: View {
             }
             return dailyWorkouts.filter { $0.startDate >= startOfMonth && $0.startDate <= now }
         case .custom:
-            // 任意の条件（現時点ではすべて返す）
-            return dailyWorkouts
+            return dailyWorkouts.filter {
+                $0.startDate >= customStartDate && $0.startDate <= customEndDate
+            }
+        }
+    }
+
+    private var dateRangeLabel: String {
+        switch selectedFilter {
+        case .all:
+            return "すべての記録"
+        case .thisWeek:
+            return "今週の記録"
+        case .thisMonth:
+            return "今月の記録"
+        case .custom:
+            return
+                "\(formattedDate(date: customStartDate)) 〜 \(formattedDate(date: customEndDate)) の記録"
         }
     }
 
@@ -55,65 +77,40 @@ struct WorkoutRecordView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+
                 List {
-                    ForEach(filteredWorkouts) { daily in
-                        NavigationLink(destination: WorkoutSheetView(daily: daily)) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(formattedDate(date: daily.startDate))
-                                        .font(.headline)
-
-                                    Spacer()
-
-                                    // Googleカレンダーとの連携状態
-                                    if daily.isSyncedToCalendar {
-                                        HStack(spacing: 15) {
-                                            Image(systemName: "calendar.badge.checkmark")
-                                            Text("連携済み")
-                                        }
-                                        .font(.footnote)
-                                        .foregroundColor(.green)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(Color.green, lineWidth: 1)
-                                        )
-                                    } else {
-                                        HStack(spacing: 15) {
-                                            Image(systemName: "calendar.badge.exclamationmark")
-                                            Text("未連携")
-                                        }
-                                        .font(.footnote)
-                                        .foregroundColor(.red)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(Color.red, lineWidth: 1)
-                                        )
-                                    }
-                                }
-
-                                Grid(alignment: .leading) {
-                                    ForEach(daily.records) { record in
-                                        GridRow {
-                                            Text(record.exerciseName)
-                                            Text("\(Int(record.weight))kg")
-                                            Text("x")
-                                            Text("\(record.reps)回")
-                                            Text("x")
-                                            Text("\(record.sets)セット")
+                    Section(
+                        header:
+                            HStack {
+                                if selectedFilter == .custom {
+                                    Button(action: {
+                                        showCustomDateSheet = true
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "calendar")
+                                            Text(dateRangeLabel)
+                                                .underline()
                                         }
                                         .font(.caption)
+                                        .foregroundColor(.blue)
                                     }
+                                } else {
+                                    Text(dateRangeLabel)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 8)
+                    ) {
+                        ForEach(filteredWorkouts) { daily in
+                            NavigationLink(destination: WorkoutSheetView(daily: daily)) {
+                                WorkoutRow(daily: daily)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.vertical, 8)
+                            }
+
                         }
+                        .onDelete(perform: deleteDailyWorkout)
                     }
-                    .onDelete(perform: deleteDailyWorkout)
                 }
                 .navigationTitle("トレーニング一覧")
                 .toolbar {
@@ -183,6 +180,51 @@ struct WorkoutRecordView: View {
                     ])
                     .padding()
                 }
+                .sheet(isPresented: $showCustomDateSheet) {
+                    NavigationStack {
+                        VStack(spacing: 16) {
+                            // タブ切り替えセグメント
+                            Picker("", selection: $customTabSelection) {
+                                Text("開始日").tag(0)
+                                Text("終了日").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.horizontal)
+
+                            // タブごとに表示するDatePicker
+                            if customTabSelection == 0 {
+                                DatePicker(
+                                    "",
+                                    selection: $customStartDate,
+                                    in: ...customEndDate,
+                                    displayedComponents: .date
+                                )
+                                .datePickerStyle(.wheel)
+                                .labelsHidden()
+                            } else {
+                                DatePicker(
+                                    "",
+                                    selection: $customEndDate,
+                                    in: customStartDate...Date(),
+                                    displayedComponents: .date
+                                )
+                                .datePickerStyle(.wheel)
+                                .labelsHidden()
+                            }
+                        }
+                        .padding()
+                        .presentationDetents([.height(360)])
+                        .navigationTitle("期間を選択")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("完了") {
+                                    showCustomDateSheet = false
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if showDatePicker {
                 CustomDatePicker(
@@ -204,14 +246,63 @@ struct WorkoutRecordView: View {
             context.delete(dailyWorkout)
         }
     }
+}
 
-    /// Date を "yyyy/MM/dd" 形式の文字列に変換する関数
-    private func formattedDate(date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)  // 西暦を使う
-        formatter.locale = Locale(identifier: "ja_JP")  // 日本語ロケール
-        formatter.dateFormat = "yyyy/MM/dd"  // 表示形式
-        return formatter.string(from: date)
+struct WorkoutRow: View {
+    let daily: DailyWorkout
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(formattedDate(date: daily.startDate))
+                    .font(.headline)
+
+                Spacer()
+
+                // Googleカレンダーとの連携状態
+                if daily.isSyncedToCalendar {
+                    HStack(spacing: 15) {
+                        Image(systemName: "calendar.badge.checkmark")
+                        Text("連携済み")
+                    }
+                    .font(.footnote)
+                    .foregroundColor(.green)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.green, lineWidth: 1)
+                    )
+                } else {
+                    HStack(spacing: 15) {
+                        Image(systemName: "calendar.badge.exclamationmark")
+                        Text("未連携")
+                    }
+                    .font(.footnote)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.red, lineWidth: 1)
+                    )
+                }
+            }
+
+            Grid(alignment: .leading) {
+                ForEach(daily.records) { record in
+                    GridRow {
+                        Text(record.exerciseName)
+                        Text("\(Int(record.weight))kg")
+                        Text("x")
+                        Text("\(record.reps)回")
+                        Text("x")
+                        Text("\(record.sets)セット")
+                    }
+                    .font(.caption)
+                }
+            }
+        }
     }
 }
 
@@ -267,6 +358,15 @@ struct CustomDatePicker: View {
             .padding(.horizontal, 20)
         }
     }
+}
+
+/// Date を "yyyy/MM/dd" 形式の文字列に変換する関数
+func formattedDate(date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)  // 西暦を使う
+    formatter.locale = Locale(identifier: "ja_JP")  // 日本語ロケール
+    formatter.dateFormat = "yyyy/MM/dd"  // 表示形式
+    return formatter.string(from: date)
 }
 
 // MARK: - ヘルパー
