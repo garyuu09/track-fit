@@ -5,8 +5,6 @@
 //  Created by Ryuga on 2025/03/08.
 //
 
-import GoogleSignIn
-import GoogleSignInSwift
 import SwiftUI
 
 struct SettingView: View {

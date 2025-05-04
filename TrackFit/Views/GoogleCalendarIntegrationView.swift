@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GoogleCalendarIntegrationView: View {
-    let onFinish: () -> Void
+    let onFinish: (Bool) -> Void
     @State private var animateSteps = false
 
     var body: some View {
@@ -77,7 +77,7 @@ struct GoogleCalendarIntegrationView: View {
 
                     HStack(spacing: 20) {
                         Button {
-                            onFinish()
+                            onFinish(false)
                         } label: {
                             Label("後で", systemImage: "xmark")
                                 .frame(minWidth: 100)
@@ -85,7 +85,12 @@ struct GoogleCalendarIntegrationView: View {
                         .buttonStyle(.bordered)
 
                         Button {
-                            onFinish()
+                            Task {
+                                let success = try await GoogleCalendarAPI.linkGoogleCalendar()
+                                if success {
+                                    onFinish(true)
+                                }
+                            }
                         } label: {
                             Label("連携する", systemImage: "link")
                                 .frame(minWidth: 100)
@@ -108,5 +113,5 @@ struct GoogleCalendarIntegrationView: View {
 }
 
 #Preview {
-    GoogleCalendarIntegrationView(onFinish: {})
+    GoogleCalendarIntegrationView(onFinish: { _ in })
 }
