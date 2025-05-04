@@ -8,8 +8,18 @@ struct WorkoutRecordView: View {
         var id: String { self.rawValue }
     }
 
-    @Query private var dailyWorkouts: [DailyWorkout] = []
+    // 「連携画面を見たか？」のフラグを永続化
+    @AppStorage("hasShownCalendarIntegration") private var hasShownCalendarIntegration: Bool = false
+    // Googleカレンダー連携状態
+    @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
+    // バナー表示フラグ
+    @State private var showIntegrationBanner: Bool = true
+    // 同期失敗アラート用フラグ
+    @State private var showSyncErrorAlert: Bool = false
+    // モーダル表示フラグ
+    @State private var isShowCalendarIntegration: Bool = false
 
+    @Query private var dailyWorkouts: [DailyWorkout] = []
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
     @State var showDatePicker: Bool = false
@@ -76,6 +86,32 @@ struct WorkoutRecordView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+
+                // Googleカレンダー未連携バナー
+                if !isCalendarLinked && hasShownCalendarIntegration && showIntegrationBanner {
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.yellow)
+                        Text("Google カレンダーが連携されていません")
+                            .font(.footnote)
+                        Spacer()
+                        Button {
+                            //                            viewModel.linkGoogleCalendar()
+                            isShowCalendarIntegration = true
+                        } label: {
+                            Text("今すぐ連携")
+                        }
+                        .font(.subheadline)
+                        .buttonStyle(.borderedProminent)
+                        Button(action: { showIntegrationBanner = false }) {
+                            Image(systemName: "xmark")
+                        }
+                    }
+                    .padding()
+                    .background(Color.yellow.opacity(0.2))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                }
 
                 List {
                     Section(
@@ -237,6 +273,31 @@ struct WorkoutRecordView: View {
                 .transition(.opacity)
             }
         }
+        .onAppear {
+            // 初回起動ならモーダルを出す
+            if !hasShownCalendarIntegration {
+                isShowCalendarIntegration = true
+            }
+        }
+        // モーダルで連携画面を表示
+        .sheet(isPresented: $isShowCalendarIntegration) {
+            GoogleCalendarIntegrationView { didLink in
+                if didLink {
+                    isCalendarLinked = true
+                }
+                hasShownCalendarIntegration = true
+                isShowCalendarIntegration = false
+            }
+        }
+        // 連携失敗アラート
+        .alert("連携に失敗しました", isPresented: $showSyncErrorAlert) {
+            Button("再連携") {
+                isShowCalendarIntegration = true
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("もう一度サインインしてください。")
+        }
     }
 
     private func deleteDailyWorkout(at offsets: IndexSet) {
@@ -244,6 +305,10 @@ struct WorkoutRecordView: View {
             let dailyWorkout = dailyWorkouts[index]
             context.delete(dailyWorkout)
         }
+    }
+    // 例: Googleカレンダー同期処理の中で失敗時に呼ぶ
+    private func onCalendarSyncFailed() {
+        showSyncErrorAlert = true
     }
 }
 

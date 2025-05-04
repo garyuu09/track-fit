@@ -13,6 +13,7 @@ struct SettingView: View {
     @State private var isGoogleCalendarLinked: Bool = false
     @State private var linkedAccountEmail: String? = nil
     @State private var accessToken: String? = nil
+    @State private var isShowCalendarIntegration: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -22,22 +23,34 @@ struct SettingView: View {
                         Text("Googleカレンダー")
                         Spacer()
                         if isGoogleCalendarLinked, let email = linkedAccountEmail {
-                            Text("連携済み")
-                                .foregroundColor(.green)
-                                .font(.subheadline)
-                            VStack(alignment: .trailing) {
-                                Text(email)
-                                    .foregroundColor(.secondary)
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "calendar.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.title3)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Googleカレンダーと連携中")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.green)
+
+                                    Text(email)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+
+                                    Button("連携を解除") {
+                                        GoogleCalendarAPI.unlinkGoogleCalendar()
+                                        self.isGoogleCalendarLinked = false
+                                        self.linkedAccountEmail = nil
+                                        self.accessToken = nil
+                                    }
                                     .font(.caption)
-                                Button("連携解除") {
-                                    unlinkGoogleCalendar()
+                                    .foregroundColor(.red)
                                 }
-                                .font(.caption)
-                                .foregroundColor(.red)
                             }
                         } else {
                             Button("連携する") {
-                                linkGoogleCalendar()
+                                isShowCalendarIntegration = true
                             }
                             .buttonStyle(.borderedProminent)
                         }
@@ -61,6 +74,19 @@ struct SettingView: View {
             .onAppear {
                 loadLinkedStatus()
             }
+            // モーダルで連携画面を表示
+            .sheet(isPresented: $isShowCalendarIntegration) {
+                GoogleCalendarIntegrationView { didLink in
+                    if didLink {
+                        UserDefaults.standard.set(true, forKey: "isCalendarLinked")
+                        accessToken = UserDefaults.standard.string(
+                            forKey: "GoogleAccessToken")
+                        linkedAccountEmail = UserDefaults.standard.string(
+                            forKey: "GoogleEmail")
+                    }
+                    isShowCalendarIntegration = false
+                }
+            }
         }
     }
 
@@ -77,80 +103,6 @@ struct SettingView: View {
             self.isGoogleCalendarLinked = false
             self.linkedAccountEmail = nil
         }
-    }
-
-    // Googleカレンダーとの連携処理（OAuth認証フローを実行）
-    func linkGoogleCalendar() {
-        Task {
-            do {
-                // 1. Info.plist に登録されている CLIENT_ID を取得
-                guard
-                    let clientID = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String
-                else {
-                    print("CLIENT_ID が見つかりません")
-                    return
-                }
-
-                // 2. GIDSignInのconfigurationを設定
-                GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
-
-                // 3. presenting用のrootViewControllerを取得（SceneDelegate利用の場合）
-                guard
-                    let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                    let rootViewController = windowScene.windows.first?.rootViewController
-                else {
-                    return
-                }
-
-                // 4. Googleサインイン（OAuth認証）を実施
-                let signInResult = try await GIDSignIn.sharedInstance.signIn(
-                    withPresenting: rootViewController,
-                    hint: nil,
-                    additionalScopes: [
-                        "https://www.googleapis.com/auth/calendar.readonly",
-                        "https://www.googleapis.com/auth/calendar.events",
-                    ]
-                )
-
-                let user = signInResult.user
-                let idToken = user.idToken?.tokenString
-                let token = user.accessToken.tokenString
-                self.accessToken = token
-
-                // ユーザーのメールアドレスを取得
-                let email = user.profile?.email ?? "user@gmail.com"
-
-                // メインスレッドで連携状態を更新
-                await MainActor.run {
-                    self.isGoogleCalendarLinked = true
-                    self.linkedAccountEmail = email
-                }
-
-                // UserDefaultsにアクセストークンやメールを保存する
-                UserDefaults.standard.set(token, forKey: "GoogleAccessToken")
-                UserDefaults.standard.set(email, forKey: "GoogleEmail")
-
-                print("ログイン成功!")
-                print("idToken: \(idToken ?? "")")
-                print("accessToken: \(token)")
-
-            } catch {
-                print("ログインエラー: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    // Googleカレンダーとの連携解除処理
-    func unlinkGoogleCalendar() {
-        // Googleサインアウト処理
-        GIDSignIn.sharedInstance.signOut()
-        self.isGoogleCalendarLinked = false
-        self.linkedAccountEmail = nil
-        self.accessToken = nil
-
-        // 保存しているトークンやメールアドレスを削除
-        UserDefaults.standard.removeObject(forKey: "GoogleAccessToken")
-        UserDefaults.standard.removeObject(forKey: "GoogleEmail")
     }
 }
 #Preview {

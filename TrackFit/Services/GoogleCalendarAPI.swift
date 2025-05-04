@@ -5,6 +5,8 @@
 //  Created by Ryuga on 2024/12/28.
 //
 import Foundation
+import GoogleSignIn
+import GoogleSignInSwift
 
 struct GoogleCalendarAPI {
     // APIのレスポンス全体
@@ -199,5 +201,63 @@ struct GoogleCalendarAPI {
                         "イベント更新失敗 (\(httpResponse.statusCode))\n\(bodyString)"
                 ])
         }
+    }
+
+    // Googleカレンダーとの連携処理（OAuth認証フローを実行）
+    static func linkGoogleCalendar() async throws -> Bool {
+        do {
+            guard
+                let clientID = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String
+            else {
+                print("CLIENT_ID が見つかりません")
+                return false
+            }
+
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+
+            guard
+                let windowScene = await UIApplication.shared.connectedScenes.first
+                    as? UIWindowScene,
+                let rootViewController = await windowScene.windows.first?.rootViewController
+            else {
+                return false
+            }
+
+            let signInResult = try await GIDSignIn.sharedInstance.signIn(
+                withPresenting: rootViewController,
+                hint: nil,
+                additionalScopes: [
+                    "https://www.googleapis.com/auth/calendar.readonly",
+                    "https://www.googleapis.com/auth/calendar.events",
+                ]
+            )
+
+            let user = signInResult.user
+            let idToken = user.idToken?.tokenString
+            let token = user.accessToken.tokenString
+            let email = user.profile?.email ?? "user@gmail.com"
+
+            UserDefaults.standard.set(token, forKey: "GoogleAccessToken")
+            UserDefaults.standard.set(email, forKey: "GoogleEmail")
+
+            print("ログイン成功!")
+            print("idToken: \(idToken ?? "")")
+            print("accessToken: \(token)")
+            return true
+
+        } catch {
+            print("ログインエラー: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    // Googleカレンダーとの連携解除処理
+    static func unlinkGoogleCalendar() {
+        // Googleサインアウト処理
+        GIDSignIn.sharedInstance.signOut()
+
+        // 保存しているトークンやメールアドレスを削除
+        UserDefaults.standard.removeObject(forKey: "GoogleAccessToken")
+        UserDefaults.standard.removeObject(forKey: "GoogleEmail")
     }
 }
