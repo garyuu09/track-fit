@@ -10,7 +10,6 @@ struct WorkoutRecordView: View {
 
     @Query private var dailyWorkouts: [DailyWorkout] = []
 
-    @State private var searchText: String = ""
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
     @State var showDatePicker: Bool = false
