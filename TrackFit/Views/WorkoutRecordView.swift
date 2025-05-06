@@ -89,28 +89,9 @@ struct WorkoutRecordView: View {
 
                 // Googleカレンダー未連携バナー
                 if !isCalendarLinked && hasShownCalendarIntegration && showIntegrationBanner {
-                    HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.yellow)
-                        Text("Google カレンダーが連携されていません")
-                            .font(.footnote)
-                        Spacer()
-                        Button {
-                            //                            viewModel.linkGoogleCalendar()
-                            isShowCalendarIntegration = true
-                        } label: {
-                            Text("今すぐ連携")
-                        }
-                        .font(.subheadline)
-                        .buttonStyle(.borderedProminent)
-                        Button(action: { showIntegrationBanner = false }) {
-                            Image(systemName: "xmark")
-                        }
-                    }
-                    .padding()
-                    .background(Color.yellow.opacity(0.2))
-                    .cornerRadius(8)
-                    .padding(.horizontal)
+                    AlertBannerView(
+                        isShowCalendarIntegration: $isShowCalendarIntegration,
+                        showIntegrationBanner: $showIntegrationBanner)
                 }
 
                 List {
