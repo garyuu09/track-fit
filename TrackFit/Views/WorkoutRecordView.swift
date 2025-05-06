@@ -389,7 +389,7 @@ struct CustomDatePicker: View {
                         // 新規の日付を追加するなどの処理 (例)
                         let newDaily = DailyWorkout(
                             startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60),
-                            records: [], isSyncedToCalendar: true)
+                            records: [], isSyncedToCalendar: false)
                         context.insert(newDaily)
                     }
                 }
