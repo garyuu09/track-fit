@@ -1,8 +1,10 @@
+import Foundation
 import SwiftData
 import SwiftUI
 
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
+    @State private var syncingWorkoutIDs: Set<UUID> = []
     enum FilterType: String, CaseIterable, Identifiable {
         case all, thisWeek, thisMonth, custom
         var id: String { self.rawValue }
@@ -119,11 +121,26 @@ struct WorkoutRecordView: View {
                     ) {
                         ForEach(filteredWorkouts) { daily in
                             NavigationLink(destination: WorkoutSheetView(daily: daily)) {
-                                WorkoutRow(daily: daily)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 8)
+                                WorkoutRow(
+                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id)
+                                )
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 8)
                             }
-
+                            .onReceive(
+                                NotificationCenter.default.publisher(for: .didStartSyncingWorkout)
+                            ) { notification in
+                                if let id = notification.object as? UUID {
+                                    syncingWorkoutIDs.insert(id)
+                                }
+                            }
+                            .onReceive(
+                                NotificationCenter.default.publisher(for: .didFinishSyncingWorkout)
+                            ) { notification in
+                                if let id = notification.object as? UUID {
+                                    syncingWorkoutIDs.remove(id)
+                                }
+                            }
                         }
                         .onDelete(perform: deleteDailyWorkout)
                     }
@@ -295,6 +312,7 @@ struct WorkoutRecordView: View {
 
 struct WorkoutRow: View {
     let daily: DailyWorkout
+    let isSyncing: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -304,8 +322,15 @@ struct WorkoutRow: View {
 
                 Spacer()
 
-                // Googleカレンダーとの連携状態
-                if daily.isSyncedToCalendar {
+                if isSyncing {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("連携中…")
+                    }
+                    .font(.footnote)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                } else if daily.isSyncedToCalendar {
                     HStack(spacing: 15) {
                         Image(systemName: "calendar.badge.checkmark")
                         Text("連携済み")
@@ -424,4 +449,9 @@ private func dateFromString(_ string: String) -> Date {
 // MARK: - プレビュー
 #Preview {
     WorkoutRecordView()
+}
+
+extension Notification.Name {
+    static let didStartSyncingWorkout = Notification.Name("didStartSyncingWorkout")
+    static let didFinishSyncingWorkout = Notification.Name("didFinishSyncingWorkout")
 }
