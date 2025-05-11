@@ -27,7 +27,7 @@ class WorkoutViewModel: ObservableObject {
     var accessToken: String = ""
 
     /// 新規イベント作成
-    func createEvent(dailyWorkout: DailyWorkout) async {
+    func createEvent(dailyWorkout: DailyWorkout) async -> Bool {
         do {
             isLoading = true
             errorMessage = nil
@@ -40,9 +40,11 @@ class WorkoutViewModel: ObservableObject {
 
         } catch {
             self.errorMessage = error.localizedDescription
+            return false
         }
         /// 新規イベント作成処理が終了したため、ローディング状態を解除する。
         isLoading = false
+        return true
     }
 
     /// 既存イベントを更新
