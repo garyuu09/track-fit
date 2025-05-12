@@ -243,6 +243,7 @@ struct GoogleCalendarAPI {
             print("ログイン成功!")
             print("idToken: \(idToken ?? "")")
             print("accessToken: \(token)")
+            UserDefaults.standard.set(true, forKey: "isCalendarLinked")
             return true
 
         } catch {

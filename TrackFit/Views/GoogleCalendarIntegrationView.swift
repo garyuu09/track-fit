@@ -10,6 +10,7 @@ import SwiftUI
 struct GoogleCalendarIntegrationView: View {
     let onFinish: (Bool) -> Void
     @State private var animateSteps = false
+    @Binding var showIntegrationBanner: Bool
 
     var body: some View {
         ZStack {
@@ -78,6 +79,7 @@ struct GoogleCalendarIntegrationView: View {
                     HStack(spacing: 20) {
                         Button {
                             onFinish(false)
+                            UserDefaults.standard.set(false, forKey: "isCalendarLinked")
                         } label: {
                             Label("後で", systemImage: "xmark")
                                 .frame(minWidth: 100)
@@ -89,6 +91,8 @@ struct GoogleCalendarIntegrationView: View {
                                 let success = try await GoogleCalendarAPI.linkGoogleCalendar()
                                 if success {
                                     onFinish(true)
+                                    showIntegrationBanner = false
+                                    print("showIntegrationBanner: \(showIntegrationBanner)")
                                 }
                             }
                         } label: {
@@ -113,5 +117,6 @@ struct GoogleCalendarIntegrationView: View {
 }
 
 #Preview {
-    GoogleCalendarIntegrationView(onFinish: { _ in })
+    @Previewable @State var showIntegrationBanner = true
+    GoogleCalendarIntegrationView(onFinish: { _ in }, showIntegrationBanner: $showIntegrationBanner)
 }

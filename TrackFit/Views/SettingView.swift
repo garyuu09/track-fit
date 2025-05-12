@@ -12,6 +12,7 @@ struct SettingView: View {
     @State private var linkedAccountEmail: String? = nil
     @State private var accessToken: String? = nil
     @State private var isShowCalendarIntegration: Bool = false
+    @State private var showIntegrationBanner: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -38,9 +39,12 @@ struct SettingView: View {
 
                                     Button("連携を解除") {
                                         GoogleCalendarAPI.unlinkGoogleCalendar()
-                                        self.isGoogleCalendarLinked = false
-                                        self.linkedAccountEmail = nil
-                                        self.accessToken = nil
+                                        UserDefaults.standard.set(false, forKey: "isCalendarLinked")
+                                        isGoogleCalendarLinked = false
+                                        UserDefaults.standard.set(
+                                            true, forKey: "showIntegrationBanner")
+                                        linkedAccountEmail = nil
+                                        accessToken = nil
                                     }
                                     .font(.caption)
                                     .foregroundColor(.red)
@@ -74,16 +78,19 @@ struct SettingView: View {
             }
             // モーダルで連携画面を表示
             .sheet(isPresented: $isShowCalendarIntegration) {
-                GoogleCalendarIntegrationView { didLink in
-                    if didLink {
-                        UserDefaults.standard.set(true, forKey: "isCalendarLinked")
-                        accessToken = UserDefaults.standard.string(
-                            forKey: "GoogleAccessToken")
-                        linkedAccountEmail = UserDefaults.standard.string(
-                            forKey: "GoogleEmail")
-                    }
-                    isShowCalendarIntegration = false
-                }
+                GoogleCalendarIntegrationView(
+                    onFinish: { didLink in
+                        if didLink {
+                            UserDefaults.standard.set(true, forKey: "isCalendarLinked")
+                            accessToken = UserDefaults.standard.string(
+                                forKey: "GoogleAccessToken")
+                            linkedAccountEmail = UserDefaults.standard.string(
+                                forKey: "GoogleEmail")
+                        }
+                        isShowCalendarIntegration = false
+                    },
+                    showIntegrationBanner: $showIntegrationBanner
+                )
             }
         }
     }

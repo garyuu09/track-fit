@@ -5,6 +5,7 @@
 //  Created by Ryuga on 2025/03/09.
 //
 
+import Foundation
 import SwiftData
 import SwiftUI
 
@@ -90,18 +91,6 @@ struct WorkoutSheetView: View {
                     .padding()
             }
 
-            // 新規トレーニングを追加ボタン
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        let newRecord = WorkoutRecord(
-                            exerciseName: "新種目", weight: 10, reps: 10, sets: 3)
-                        daily.records.append(newRecord)
-                    } label: {
-                        Label("追加", systemImage: "plus.circle.fill")
-                    }
-                }
-            }
             Spacer()
         }
         .navigationTitle("トレーニング管理")
@@ -110,19 +99,42 @@ struct WorkoutSheetView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
-                    // 戻るボタンが押されたときの任意の処理
-                    // イベントをGoogleカレンダーに登録する
+                    // 同期開始を通知
+                    NotificationCenter.default.post(name: .didStartSyncingWorkout, object: daily.id)
                     Task {
-                        await viewModel.createEvent(dailyWorkout: daily)
-                        // TODO: 更新処理もここで行いたい。
+                        // Googleカレンダーにイベント作成
+                        let success = await viewModel.createEvent(dailyWorkout: daily)
+                        if success {
+                            // モデルを更新し永続化
+                            daily.isSyncedToCalendar = true
+                            try? context.save()
+                        }
+                        // 同期完了を通知
+                        NotificationCenter.default.post(
+                            name: .didFinishSyncingWorkout, object: daily.id)
+                        // ビューを閉じる
+                        dismiss()
                     }
-                    // ビューを閉じる
-                    dismiss()
                 }) {
                     HStack {
                         Image(systemName: "chevron.left")
                         Text("Back")
                     }
+                }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    let newRecord = WorkoutRecord(
+                        exerciseName: "新種目",
+                        weight: 10,
+                        reps: 10,
+                        sets: 3
+                    )
+                    daily.records.append(newRecord)
+                    // 追加後に編集シートを自動表示
+                    editingRecord = newRecord
+                } label: {
+                    Label("追加", systemImage: "plus.circle.fill")
                 }
             }
         }
