@@ -15,7 +15,9 @@ struct WorkoutRecordView: View {
     // Googleカレンダー連携状態
     @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
     // バナー表示フラグ
-    @State private var showIntegrationBanner: Bool = true
+    @AppStorage("showIntegrationBanner") private var showIntegrationBanner: Bool = true
+    // バナーを最後に非表示にした日付 (yyyy/MM/dd)
+    @AppStorage("lastBannerDismissDate") private var lastBannerDismissDate: String = ""
     // 同期失敗アラート用フラグ
     @State private var showSyncErrorAlert: Bool = false
     // モーダル表示フラグ
@@ -89,11 +91,18 @@ struct WorkoutRecordView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                // Googleカレンダー未連携バナー
-                if !isCalendarLinked && hasShownCalendarIntegration && showIntegrationBanner {
-                    AlertBannerView(
-                        isShowCalendarIntegration: $isShowCalendarIntegration,
-                        showIntegrationBanner: $showIntegrationBanner)
+                // MARK: Googleカレンダー未連携バナー
+                /// 永続化している`isCalendarLinked`と`hasShownCalendarIntegration`をチェック
+                /// `isCalendarLinked`: Googleカレンダーとの連携状態（`true`のとき、Googleカレンダーと連携中）
+                ///`hasShownCalendarIntegration`: 「連携画面を見たか？」のフラグを永続化（`true`のとき、連携画面を一度以上表示済み）
+                if !isCalendarLinked || !hasShownCalendarIntegration {
+                    let todayString = formattedDate(date: Date())
+                    if showIntegrationBanner && lastBannerDismissDate != todayString {
+                        AlertBannerView(
+                            isShowCalendarIntegration: $isShowCalendarIntegration,
+                            showIntegrationBanner: $showIntegrationBanner
+                        )
+                    }
                 }
 
                 List {
@@ -279,13 +288,16 @@ struct WorkoutRecordView: View {
         }
         // モーダルで連携画面を表示
         .sheet(isPresented: $isShowCalendarIntegration) {
-            GoogleCalendarIntegrationView { didLink in
-                if didLink {
-                    isCalendarLinked = true
-                }
-                hasShownCalendarIntegration = true
-                isShowCalendarIntegration = false
-            }
+            GoogleCalendarIntegrationView(
+                onFinish: { didLink in
+                    if didLink {
+                        isCalendarLinked = true
+                    }
+                    hasShownCalendarIntegration = true
+                    isShowCalendarIntegration = false
+                },
+                showIntegrationBanner: $showIntegrationBanner
+            )
         }
         // 連携失敗アラート
         .alert("連携に失敗しました", isPresented: $showSyncErrorAlert) {
@@ -295,6 +307,19 @@ struct WorkoutRecordView: View {
             Button("キャンセル", role: .cancel) {}
         } message: {
             Text("もう一度サインインしてください。")
+        }
+        // 日付が変わったらバナー表示フラグをリセット
+        .onAppear {
+            let today = formattedDate(date: Date())
+            if lastBannerDismissDate != today {
+                showIntegrationBanner = true
+            }
+        }
+        // バナーを非表示にしたとき、非表示日を保存
+        .onChange(of: showIntegrationBanner) { newValue in
+            if newValue == false {
+                lastBannerDismissDate = formattedDate(date: Date())
+            }
         }
     }
 
