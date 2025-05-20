@@ -131,7 +131,8 @@ struct WorkoutRecordView: View {
                         ForEach(filteredWorkouts) { daily in
                             NavigationLink(destination: WorkoutSheetView(daily: daily)) {
                                 WorkoutRow(
-                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id)
+                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id),
+                                    showSyncErrorAlert: $showSyncErrorAlert
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.vertical, 8)
@@ -148,6 +149,9 @@ struct WorkoutRecordView: View {
                             ) { notification in
                                 if let id = notification.object as? UUID {
                                     syncingWorkoutIDs.remove(id)
+                                    if id == daily.id && !daily.isSyncedToCalendar {
+                                        showSyncErrorAlert = true
+                                    }
                                 }
                             }
                         }
@@ -304,7 +308,9 @@ struct WorkoutRecordView: View {
             Button("再連携") {
                 isShowCalendarIntegration = true
             }
-            Button("キャンセル", role: .cancel) {}
+            Button("キャンセル", role: .cancel) {
+                showIntegrationBanner = true
+            }
         } message: {
             Text("もう一度サインインしてください。")
         }
@@ -334,6 +340,7 @@ struct WorkoutRecordView: View {
 struct WorkoutRow: View {
     let daily: DailyWorkout
     let isSyncing: Bool
+    @Binding var showSyncErrorAlert: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
