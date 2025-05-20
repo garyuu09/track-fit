@@ -16,8 +16,6 @@ struct WorkoutRecordView: View {
     @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
     // バナー表示フラグ
     @AppStorage("showIntegrationBanner") private var showIntegrationBanner: Bool = true
-    // バナーを最後に非表示にした日付 (yyyy/MM/dd)
-    @AppStorage("lastBannerDismissDate") private var lastBannerDismissDate: String = ""
     // 同期失敗アラート用フラグ
     @State private var showSyncErrorAlert: Bool = false
     // モーダル表示フラグ
@@ -96,8 +94,7 @@ struct WorkoutRecordView: View {
                 /// `isCalendarLinked`: Googleカレンダーとの連携状態（`true`のとき、Googleカレンダーと連携中）
                 ///`hasShownCalendarIntegration`: 「連携画面を見たか？」のフラグを永続化（`true`のとき、連携画面を一度以上表示済み）
                 if !isCalendarLinked || !hasShownCalendarIntegration {
-                    let todayString = formattedDate(date: Date())
-                    if showIntegrationBanner && lastBannerDismissDate != todayString {
+                    if showIntegrationBanner {
                         AlertBannerView(
                             isShowCalendarIntegration: $isShowCalendarIntegration,
                             showIntegrationBanner: $showIntegrationBanner
@@ -131,7 +128,8 @@ struct WorkoutRecordView: View {
                         ForEach(filteredWorkouts) { daily in
                             NavigationLink(destination: WorkoutSheetView(daily: daily)) {
                                 WorkoutRow(
-                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id)
+                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id),
+                                    showSyncErrorAlert: $showSyncErrorAlert
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.vertical, 8)
@@ -148,6 +146,9 @@ struct WorkoutRecordView: View {
                             ) { notification in
                                 if let id = notification.object as? UUID {
                                     syncingWorkoutIDs.remove(id)
+                                    if id == daily.id && !daily.isSyncedToCalendar {
+                                        showSyncErrorAlert = true
+                                    }
                                 }
                             }
                         }
@@ -304,22 +305,11 @@ struct WorkoutRecordView: View {
             Button("再連携") {
                 isShowCalendarIntegration = true
             }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("もう一度サインインしてください。")
-        }
-        // 日付が変わったらバナー表示フラグをリセット
-        .onAppear {
-            let today = formattedDate(date: Date())
-            if lastBannerDismissDate != today {
+            Button("キャンセル", role: .cancel) {
                 showIntegrationBanner = true
             }
-        }
-        // バナーを非表示にしたとき、非表示日を保存
-        .onChange(of: showIntegrationBanner) { newValue in
-            if newValue == false {
-                lastBannerDismissDate = formattedDate(date: Date())
-            }
+        } message: {
+            Text("もう一度サインインしてください。")
         }
     }
 
@@ -329,15 +319,12 @@ struct WorkoutRecordView: View {
             context.delete(dailyWorkout)
         }
     }
-    // 例: Googleカレンダー同期処理の中で失敗時に呼ぶ
-    private func onCalendarSyncFailed() {
-        showSyncErrorAlert = true
-    }
 }
 
 struct WorkoutRow: View {
     let daily: DailyWorkout
     let isSyncing: Bool
+    @Binding var showSyncErrorAlert: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
