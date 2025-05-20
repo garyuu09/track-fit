@@ -16,8 +16,6 @@ struct WorkoutRecordView: View {
     @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
     // バナー表示フラグ
     @AppStorage("showIntegrationBanner") private var showIntegrationBanner: Bool = true
-    // バナーを最後に非表示にした日付 (yyyy/MM/dd)
-    @AppStorage("lastBannerDismissDate") private var lastBannerDismissDate: String = ""
     // 同期失敗アラート用フラグ
     @State private var showSyncErrorAlert: Bool = false
     // モーダル表示フラグ
@@ -96,8 +94,7 @@ struct WorkoutRecordView: View {
                 /// `isCalendarLinked`: Googleカレンダーとの連携状態（`true`のとき、Googleカレンダーと連携中）
                 ///`hasShownCalendarIntegration`: 「連携画面を見たか？」のフラグを永続化（`true`のとき、連携画面を一度以上表示済み）
                 if !isCalendarLinked || !hasShownCalendarIntegration {
-                    let todayString = formattedDate(date: Date())
-                    if showIntegrationBanner && lastBannerDismissDate != todayString {
+                    if showIntegrationBanner {
                         AlertBannerView(
                             isShowCalendarIntegration: $isShowCalendarIntegration,
                             showIntegrationBanner: $showIntegrationBanner
@@ -313,19 +310,6 @@ struct WorkoutRecordView: View {
             }
         } message: {
             Text("もう一度サインインしてください。")
-        }
-        // 日付が変わったらバナー表示フラグをリセット
-        .onAppear {
-            let today = formattedDate(date: Date())
-            if lastBannerDismissDate != today {
-                showIntegrationBanner = true
-            }
-        }
-        // バナーを非表示にしたとき、非表示日を保存
-        .onChange(of: showIntegrationBanner) { newValue in
-            if newValue == false {
-                lastBannerDismissDate = formattedDate(date: Date())
-            }
         }
     }
 
