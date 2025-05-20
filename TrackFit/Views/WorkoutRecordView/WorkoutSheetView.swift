@@ -123,18 +123,18 @@ struct WorkoutSheetView: View {
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    let newRecord = WorkoutRecord(
-                        exerciseName: "新種目",
-                        weight: 10,
-                        reps: 10,
-                        sets: 3
-                    )
-                    daily.records.append(newRecord)
-                    // 追加後に編集シートを自動表示
-                    editingRecord = newRecord
-                } label: {
-                    Label("追加", systemImage: "plus.circle.fill")
+                Button("保存") {
+                    NotificationCenter.default.post(name: .didStartSyncingWorkout, object: daily.id)
+                    dismiss()
+                    Task {
+                        let success = await viewModel.createEvent(dailyWorkout: daily)
+                        if success {
+                            daily.isSyncedToCalendar = true
+                            try? context.save()
+                        }
+                        NotificationCenter.default.post(
+                            name: .didFinishSyncingWorkout, object: daily.id)
+                    }
                 }
             }
         }
