@@ -157,6 +157,33 @@ struct WorkoutSheetView: View {
                 }
             )
         }
+        .overlay(
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        let newRecord = WorkoutRecord(
+                            exerciseName: "新種目",
+                            weight: 10,
+                            reps: 10,
+                            sets: 3
+                        )
+                        daily.records.append(newRecord)
+                        editingRecord = newRecord
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 28))
+                            .padding()
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .clipShape(Circle())
+                            .shadow(radius: 4)
+                    }
+                    .padding()
+                }
+            }
+        )
     }
 }
 
