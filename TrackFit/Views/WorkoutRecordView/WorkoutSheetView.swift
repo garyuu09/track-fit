@@ -157,12 +157,6 @@ struct WorkoutSheetView: View {
                 }
             )
         }
-        //        .onChange(of: startDate) { newValue in
-        //            daily.startDate = newValue
-        //        }
-        //        .onChange(of: endDate) { newValue in
-        //            daily.endDate = newValue
-        //        }
     }
 }
 
