@@ -7,7 +7,12 @@
 
 import SwiftUI
 
+enum DisplayMode: String {
+    case light, dark, system
+}
+
 struct SettingView: View {
+    @AppStorage("displayMode") private var displayMode: DisplayMode = .system
     @State private var isGoogleCalendarLinked: Bool = false
     @State private var linkedAccountEmail: String? = nil
     @State private var accessToken: String? = nil
@@ -60,7 +65,12 @@ struct SettingView: View {
                 }
                 Section("App Settings") {
                     Text("アプリの設定")
-                    Text("テーマカラー")
+                    Picker("テーマカラー", selection: $displayMode) {
+                        Text("ライト").tag(DisplayMode.light)
+                        Text("ダーク").tag(DisplayMode.dark)
+                        Text("システム").tag(DisplayMode.system)
+                    }
+                    .pickerStyle(.automatic)
                 }
                 Section("Support") {
                     Text("サポート")
