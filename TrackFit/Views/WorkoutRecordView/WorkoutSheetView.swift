@@ -95,46 +95,20 @@ struct WorkoutSheetView: View {
         }
         .navigationTitle("トレーニング管理")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)  // デフォルトの戻るボタンを隠す
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    // 同期開始を通知
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("保存") {
                     NotificationCenter.default.post(name: .didStartSyncingWorkout, object: daily.id)
+                    dismiss()
                     Task {
-                        // Googleカレンダーにイベント作成
                         let success = await viewModel.createEvent(dailyWorkout: daily)
                         if success {
-                            // モデルを更新し永続化
                             daily.isSyncedToCalendar = true
                             try? context.save()
                         }
-                        // 同期完了を通知
                         NotificationCenter.default.post(
                             name: .didFinishSyncingWorkout, object: daily.id)
-                        // ビューを閉じる
-                        dismiss()
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    let newRecord = WorkoutRecord(
-                        exerciseName: "新種目",
-                        weight: 10,
-                        reps: 10,
-                        sets: 3
-                    )
-                    daily.records.append(newRecord)
-                    // 追加後に編集シートを自動表示
-                    editingRecord = newRecord
-                } label: {
-                    Label("追加", systemImage: "plus.circle.fill")
                 }
             }
         }
@@ -157,12 +131,33 @@ struct WorkoutSheetView: View {
                 }
             )
         }
-        //        .onChange(of: startDate) { newValue in
-        //            daily.startDate = newValue
-        //        }
-        //        .onChange(of: endDate) { newValue in
-        //            daily.endDate = newValue
-        //        }
+        .overlay(
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        let newRecord = WorkoutRecord(
+                            exerciseName: "新種目",
+                            weight: 10,
+                            reps: 10,
+                            sets: 3
+                        )
+                        daily.records.append(newRecord)
+                        editingRecord = newRecord
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 28))
+                            .padding()
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .clipShape(Circle())
+                            .shadow(radius: 4)
+                    }
+                    .padding()
+                }
+            }
+        )
     }
 }
 
