@@ -329,10 +329,6 @@ struct WorkoutRecordView: View {
             context.delete(dailyWorkout)
         }
     }
-    // 例: Googleカレンダー同期処理の中で失敗時に呼ぶ
-    private func onCalendarSyncFailed() {
-        showSyncErrorAlert = true
-    }
 }
 
 struct WorkoutRow: View {
