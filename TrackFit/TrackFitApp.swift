@@ -10,9 +10,14 @@ import SwiftUI
 
 @main
 struct TrackFitApp: App {
+    @AppStorage("displayMode") var displayMode: DisplayMode = .system
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(
+                    displayMode == .system ? nil : (displayMode == .dark ? .dark : .light)
+                )
                 .modelContainer(for: DailyWorkout.self)
         }
     }
