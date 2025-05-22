@@ -156,6 +156,7 @@ struct WorkoutRecordView: View {
                     }
                 }
                 .navigationTitle("トレーニング一覧")
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     EditButton()
                 }
