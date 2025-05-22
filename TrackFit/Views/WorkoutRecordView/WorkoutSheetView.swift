@@ -101,8 +101,14 @@ struct WorkoutSheetView: View {
                     NotificationCenter.default.post(name: .didStartSyncingWorkout, object: daily.id)
                     dismiss()
                     Task {
-                        let success = await viewModel.createEvent(dailyWorkout: daily)
-                        if success {
+                        var isSaveLatestWorkout: Bool
+
+                        isSaveLatestWorkout = await viewModel.updateEvent(dailyWorkout: daily)
+                        if isSaveLatestWorkout {
+                            daily.isSyncedToCalendar = true
+                            try? context.save()
+                        } else {
+                            isSaveLatestWorkout = await viewModel.createEvent(dailyWorkout: daily)
                             daily.isSyncedToCalendar = true
                             try? context.save()
                         }

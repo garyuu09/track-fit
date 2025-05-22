@@ -48,24 +48,23 @@ class WorkoutViewModel: ObservableObject {
     }
 
     /// 既存イベントを更新
-    func updateEvent() async {
-        guard let eid = eventId else {
+    func updateEvent(dailyWorkout: DailyWorkout) async -> Bool {
+        guard let eid = dailyWorkout.eventId else {
             self.errorMessage = "イベントIDが取得できません。"
-            return
+            return false
         }
 
         do {
+            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken") ?? ""
             isLoading = true
             errorMessage = nil
 
-            let workoutData = WorkoutEventData(
-                exerciseName: exerciseName, weight: weight, sets: sets, reps: reps, date: date)
-
             try await GoogleCalendarAPI.updateWorkoutEvent(
-                accessToken: accessToken, eventId: eid, workout: workoutData)
+                accessToken: accessToken, eventId: eid, workout: dailyWorkout)
         } catch {
             self.errorMessage = error.localizedDescription
+            return false
         }
+        return true
     }
-
 }
