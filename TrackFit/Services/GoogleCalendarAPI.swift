@@ -136,29 +136,29 @@ struct GoogleCalendarAPI {
     static func updateWorkoutEvent(
         accessToken: String,
         eventId: String,
-        workout: WorkoutEventData
+        workout: DailyWorkout
     ) async throws {
-
-        // 1) 開始・終了時刻のISO8601文字列 (新規作成と同様)
+        // 1) イベント開始・終了時刻をISO8601文字列に変換 (例: 1時間の枠を確保)
+        //   ここでは簡易的に「開始=ユーザー選択のDate」「終了=+1時間」として例示します
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)  // UTC
-
-        let startString = dateFormatter.string(from: workout.date)
-        guard let endDate = Calendar.current.date(byAdding: .hour, value: 1, to: workout.date)
-        else {
-            throw URLError(.badURL)
-        }
-        let endString = dateFormatter.string(from: endDate)
+        let startString = dateFormatter.string(from: workout.startDate)
+        let endString = dateFormatter.string(from: workout.endDate)
+        // 2) イベントの要素をJSONに組み立て
+        // 各レコードの詳細を文字列に変換し、改行で結合
+        let descriptionText = workout.records.map { record in
+            """
+            種目: \(record.exerciseName)
+            重量: \(record.weight) kg
+            セット数: \(record.sets)
+            回数: \(record.reps)
+            """
+        }.joined(separator: "\n\n")
 
         // 2) 更新内容をJSONに組み立て
         let updateEventRequestBody: [String: Any] = [
-            "summary": "トレーニング: \(workout.exerciseName)",
-            "description": """
-            種目: \(workout.exerciseName)
-            重量: \(workout.weight) kg
-            セット数: \(workout.sets)
-            回数: \(workout.reps)
-            """,
+            "summary": "トレーニング",
+            "description": descriptionText,
             "start": [
                 "dateTime": startString,
                 "timeZone": "UTC",
@@ -189,7 +189,6 @@ struct GoogleCalendarAPI {
         request.httpBody = requestData
 
         let (data, response) = try await URLSession.shared.data(for: request)
-
         if let httpResponse = response as? HTTPURLResponse,
             !(200..<300).contains(httpResponse.statusCode)
         {
