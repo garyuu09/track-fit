@@ -14,6 +14,7 @@ class DailyWorkout: Identifiable {
     var id = UUID()
     var startDate: Date
     var endDate: Date
+    var eventId: String?
 
     // その日実施したトレーニング一覧
     var records: [WorkoutRecord]
@@ -21,10 +22,14 @@ class DailyWorkout: Identifiable {
     // Googleカレンダー連携済みかどうか
     var isSyncedToCalendar: Bool = false
 
-    init(startDate: Date, endDate: Date, records: [WorkoutRecord], isSyncedToCalendar: Bool) {
+    init(
+        startDate: Date, endDate: Date, records: [WorkoutRecord], eventId: String? = nil,
+        isSyncedToCalendar: Bool
+    ) {
         self.startDate = startDate
         self.endDate = endDate
         self.records = records
+        self.eventId = eventId
         self.isSyncedToCalendar = isSyncedToCalendar
     }
 }
