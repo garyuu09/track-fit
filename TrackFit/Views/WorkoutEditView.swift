@@ -61,7 +61,7 @@ struct WorkoutEditView: View {
                 Button(isUpdateMode ? "イベント更新" : "新規追加") {
                     Task {
                         if isUpdateMode {
-                            await viewModel.updateEvent()
+                            //                            await viewModel.updateEvent()
                         } else {
                             //                            await viewModel.createEvent()
                         }
