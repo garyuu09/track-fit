@@ -18,7 +18,7 @@ struct TrackFitApp: App {
                 .preferredColorScheme(
                     displayMode == .system ? nil : (displayMode == .dark ? .dark : .light)
                 )
-                .modelContainer(for: DailyWorkout.self)
+                .modelContainer(for: [DailyWorkout.self, Exercise.self])
         }
     }
 }
