@@ -171,28 +171,63 @@ struct WorkoutSheetView: View {
 struct CardView: View {
     let record: WorkoutRecord
 
+    private var iconName: String {
+        switch record.exerciseName {
+        case "ベンチプレス": return "figure.strengthtraining.traditional"
+        case "スクワット": return "figure.strengthtraining.functional"
+        case "デッドリフト": return "figure.barbell"
+        case "チェストプレス": return "figure.strengthtraining.traditional"
+        case "ラットプルダウン": return "figure.pullup"
+        default: return "dumbbell"
+        }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(record.exerciseName)
-                .font(.headline)
-
-            HStack {
-                Text("\(Int(record.weight)) kg")
-                Spacer()
-                Text("\(record.reps) 回")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Text(record.exerciseName)
+                    .font(.headline)
             }
-            .font(.subheadline)
 
-            Text("セット数: \(record.sets)")
-                .font(.footnote)
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: iconName)
+                    .font(.system(size: 30))
+                    .frame(width: 50, height: 50)
+                    .background(Color.accentColor.opacity(0.1))
+                    .foregroundColor(Color.accentColor)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "scalemass")
+                        Text("\(Int(record.weight)) kg")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.blue)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("\(record.reps) 回")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.green)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "number")
+                        Text("\(record.sets) セット")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.orange)
+                }
+            }
         }
         .padding()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
         )
-        .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 
