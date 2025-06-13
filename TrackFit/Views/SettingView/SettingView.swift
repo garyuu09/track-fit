@@ -18,6 +18,8 @@ struct SettingView: View {
     @State private var accessToken: String? = nil
     @State private var isShowCalendarIntegration: Bool = false
     @State private var showIntegrationBanner: Bool = false
+    @State private var isShowingExerciseManagement = false
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationStack {
@@ -63,6 +65,24 @@ struct SettingView: View {
                         }
                     }
                 }
+                Section("トレーニング管理") {
+                    Button(action: {
+                        isShowingExerciseManagement = true
+                    }) {
+                        HStack {
+                            Image(systemName: "dumbbell")
+                                .foregroundColor(.blue)
+                            Text("種目管理")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
                 Section("App Settings") {
                     Text("アプリの設定")
                     Picker("テーマカラー", selection: $displayMode) {
@@ -101,6 +121,9 @@ struct SettingView: View {
                     },
                     showIntegrationBanner: $showIntegrationBanner
                 )
+            }
+            .sheet(isPresented: $isShowingExerciseManagement) {
+                ExerciseManagementView(modelContext: modelContext)
             }
         }
     }
