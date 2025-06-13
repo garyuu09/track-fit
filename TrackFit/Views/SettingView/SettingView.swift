@@ -82,7 +82,7 @@ struct SettingView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
-                
+
                 Section("App Settings") {
                     Text("アプリの設定")
                     Picker("テーマカラー", selection: $displayMode) {

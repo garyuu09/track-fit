@@ -216,7 +216,8 @@ struct EditWorkoutSheetView: View {
                     }) {
                         HStack {
                             Text(record.exerciseName.isEmpty ? "種目を選択" : record.exerciseName)
-                                .foregroundColor(record.exerciseName.isEmpty ? .secondary : .primary)
+                                .foregroundColor(
+                                    record.exerciseName.isEmpty ? .secondary : .primary)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption)

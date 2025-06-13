@@ -14,7 +14,8 @@ struct ExerciseManagementView: View {
     @Environment(\.dismiss) private var dismiss
 
     init(modelContext: ModelContext) {
-        self._exerciseViewModel = StateObject(wrappedValue: ExerciseViewModel(modelContext: modelContext))
+        self._exerciseViewModel = StateObject(
+            wrappedValue: ExerciseViewModel(modelContext: modelContext))
     }
 
     var body: some View {
@@ -35,7 +36,9 @@ struct ExerciseManagementView: View {
                                 }
                             }
                             .onDelete { offsets in
-                                let exercisesToDelete = offsets.map { exerciseViewModel.exercises(for: category)[$0] }
+                                let exercisesToDelete = offsets.map {
+                                    exerciseViewModel.exercises(for: category)[$0]
+                                }
                                 for exercise in exercisesToDelete {
                                     exerciseViewModel.deleteExercise(exercise)
                                 }
@@ -74,7 +77,8 @@ struct ExerciseManagementView: View {
                     title: "種目を編集",
                     exercise: exercise,
                     onSave: { name, category, memo in
-                        exerciseViewModel.updateExercise(exercise, name: name, category: category, memo: memo)
+                        exerciseViewModel.updateExercise(
+                            exercise, name: name, category: category, memo: memo)
                     }
                 )
             }
@@ -124,7 +128,7 @@ struct ExerciseFormView: View {
 
     // よく使われるカテゴリの候補
     private let commonCategories = [
-        "胸", "背中", "肩", "腕", "脚", "腹筋", "有酸素", "その他"
+        "胸", "背中", "肩", "腕", "脚", "腹筋", "有酸素", "その他",
     ]
 
     var body: some View {
@@ -132,13 +136,15 @@ struct ExerciseFormView: View {
             Form {
                 Section("基本情報") {
                     TextField("種目名", text: $name)
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("カテゴリ")
                             .font(.headline)
                         TextField("カテゴリ", text: $category)
-                        
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8) {
+
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8
+                        ) {
                             ForEach(commonCategories, id: \.self) { commonCategory in
                                 Button(commonCategory) {
                                     category = commonCategory
@@ -146,14 +152,17 @@ struct ExerciseFormView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(category == commonCategory ? Color.blue : Color.gray.opacity(0.2))
+                                .background(
+                                    category == commonCategory
+                                        ? Color.blue : Color.gray.opacity(0.2)
+                                )
                                 .foregroundColor(category == commonCategory ? .white : .primary)
                                 .cornerRadius(8)
                             }
                         }
                     }
                 }
-                
+
                 Section("メモ") {
                     TextField("メモ（任意）", text: $memo, axis: .vertical)
                         .lineLimit(3...6)
