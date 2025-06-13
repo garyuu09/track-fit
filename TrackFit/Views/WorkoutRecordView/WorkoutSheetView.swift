@@ -144,7 +144,7 @@ struct WorkoutSheetView: View {
                     Spacer()
                     Button(action: {
                         let newRecord = WorkoutRecord(
-                            exerciseName: "新種目",
+                            exerciseName: "",
                             weight: 10,
                             reps: 10,
                             sets: 3
@@ -196,20 +196,34 @@ struct CardView: View {
     }
 }
 
-// MARK: - トレーニング編集用シート(簡易的)
+// MARK: - トレーニング編集用シート(種目選択機能付き)
 struct EditWorkoutSheetView: View {
     @State var record: WorkoutRecord
+    @Environment(\.modelContext) private var modelContext
 
     var onSave: (WorkoutRecord) -> Void
     var onDelete: () -> Void
 
     @Environment(\.presentationMode) private var presentationMode
+    @State private var isShowingExerciseSelection = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section(header: Text("種目名")) {
-                    TextField("種目名", text: $record.exerciseName)
+                    Button(action: {
+                        isShowingExerciseSelection = true
+                    }) {
+                        HStack {
+                            Text(record.exerciseName.isEmpty ? "種目を選択" : record.exerciseName)
+                                .foregroundColor(record.exerciseName.isEmpty ? .secondary : .primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 Section(header: Text("重量(kg)")) {
                     TextField("重量", value: $record.weight, format: .number)
@@ -244,6 +258,11 @@ struct EditWorkoutSheetView: View {
                     presentationMode.wrappedValue.dismiss()
                 }
             )
+            .sheet(isPresented: $isShowingExerciseSelection) {
+                ExerciseSelectionView(modelContext: modelContext) { selectedExercise in
+                    record.exerciseName = selectedExercise.name
+                }
+            }
         }
     }
 }

@@ -33,3 +33,21 @@ Secrets.xcconfig
 
 
 # その他、独自に機密情報を含むファイルパターンがあれば追加
+
+#------------------------------------------------------------
+# Claude Code 関連ファイル
+#------------------------------------------------------------
+# Claude Code のセッションファイル（一時的なワークスペース情報）
+.claude/
+.claude-cache/
+
+# Claude Code が生成する一時ファイル
+.claude_temp*
+claude_temp*
+
+# Claude Code のログファイル
+claude-*.log
+
+# その他の AI ツール関連の一時ファイル
+.ai-temp/
+ai-generated-*
