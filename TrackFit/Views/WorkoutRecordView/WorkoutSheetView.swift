@@ -225,6 +225,7 @@ struct WorkoutSheetView: View {
 // MARK: - トレーニング1件分のカード表示
 struct CardView: View {
     let record: WorkoutRecord
+    @Environment(\.colorScheme) var colorScheme
 
     private var iconName: String {
         switch record.exerciseName {
@@ -242,6 +243,8 @@ struct CardView: View {
             HStack(spacing: 12) {
                 Text(record.exerciseName)
                     .font(.headline)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
+                    .lineLimit(1)
             }
 
             HStack(alignment: .center, spacing: 12) {
@@ -253,36 +256,53 @@ struct CardView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "scalemass")
-                        Text("\(Int(record.weight)) kg")
+                            .font(.caption)
+                        Text("\(Int(record.weight))kg")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                     }
-                    .font(.subheadline)
                     .foregroundColor(Color.blue)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                        Text("\(record.reps) 回")
+                            .font(.caption)
+                        Text("\(record.reps)回")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                     }
-                    .font(.subheadline)
                     .foregroundColor(Color.green)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "number")
-                        Text("\(record.sets) セット")
+                            .font(.caption)
+                        Text("\(record.sets)セット")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
                     }
-                    .font(.subheadline)
                     .foregroundColor(Color.orange)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(colorScheme == .dark ? Color(.systemGray6) : Color(.systemBackground))
+                .stroke(colorScheme == .dark ? Color(.systemGray4) : Color.clear, lineWidth: 0.5)
         )
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .shadow(
+            color: colorScheme == .dark ? Color.clear : Color.black.opacity(0.1),
+            radius: 4, x: 0, y: 2
+        )
     }
 }
 
