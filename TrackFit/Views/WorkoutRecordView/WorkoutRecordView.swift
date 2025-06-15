@@ -341,7 +341,7 @@ struct WorkoutRecordView: View {
                 await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
             }
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 // フォアグラウンド復帰時に連携状態をチェック
                 Task {
