@@ -99,6 +99,14 @@ struct SettingView: View {
             .navigationTitle("設定")
             .onAppear {
                 loadLinkedStatus()
+                // 連携状態の最新チェック
+                Task {
+                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                    // チェック後に最新状態を再読み込み
+                    DispatchQueue.main.async {
+                        loadLinkedStatus()
+                    }
+                }
             }
             // モーダルで連携画面を表示
             .sheet(isPresented: $isShowCalendarIntegration) {
@@ -110,8 +118,11 @@ struct SettingView: View {
                                 forKey: "GoogleAccessToken")
                             linkedAccountEmail = UserDefaults.standard.string(
                                 forKey: "GoogleEmail")
+                            isGoogleCalendarLinked = true
                         }
                         isShowCalendarIntegration = false
+                        // 連携状態を再読み込みして最新状態を反映
+                        loadLinkedStatus()
                     },
                     showIntegrationBanner: $showIntegrationBanner
                 )
@@ -125,15 +136,22 @@ struct SettingView: View {
     // 連携状態を読み込み（例：UserDefaultsまたはキーチェーンから）
     func loadLinkedStatus() {
         // ※ここではUserDefaultsを使った例です。実際はセキュアなキーチェーンへの保存を検討してください。
-        if let savedToken = UserDefaults.standard.string(forKey: "GoogleAccessToken"),
-            let savedEmail = UserDefaults.standard.string(forKey: "GoogleEmail")
-        {
+        let isLinked = UserDefaults.standard.bool(forKey: "isCalendarLinked")
+        let savedToken = UserDefaults.standard.string(forKey: "GoogleAccessToken")
+        let savedEmail = UserDefaults.standard.string(forKey: "GoogleEmail")
+
+        if isLinked && savedToken != nil && savedEmail != nil {
             self.accessToken = savedToken
             self.isGoogleCalendarLinked = true
             self.linkedAccountEmail = savedEmail
         } else {
             self.isGoogleCalendarLinked = false
             self.linkedAccountEmail = nil
+            self.accessToken = nil
+            // 不整合がある場合はフラグをfalseに統一
+            if isLinked {
+                UserDefaults.standard.set(false, forKey: "isCalendarLinked")
+            }
         }
     }
 }
