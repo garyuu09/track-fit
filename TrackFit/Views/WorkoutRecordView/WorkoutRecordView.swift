@@ -20,8 +20,10 @@ struct WorkoutRecordView: View {
     @State private var showSyncErrorAlert: Bool = false
     // モーダル表示フラグ
     @State private var isShowCalendarIntegration: Bool = false
+    // カレンダー連携促進アラート用フラグ
+    @State private var showCalendarIntegrationPromptAlert: Bool = false
 
-    @Query private var dailyWorkouts: [DailyWorkout] = []
+    @Query(sort: \DailyWorkout.startDate, order: .forward) private var dailyWorkouts: [DailyWorkout]
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
     @State var showDatePicker: Bool = false
@@ -29,6 +31,7 @@ struct WorkoutRecordView: View {
     @State private var showCustomDateSheet = false
 
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     // 選択した日付
     @State private var selectedDate = Date()
     @State private var selectedFilter: FilterType = .all
@@ -43,24 +46,30 @@ struct WorkoutRecordView: View {
         let calendar = Calendar.current
         let now = Date()
 
+        let filtered: [DailyWorkout]
         switch selectedFilter {
         case .all:
-            return dailyWorkouts
+            filtered = dailyWorkouts
         case .thisWeek:
             guard let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start else {
-                return dailyWorkouts
+                filtered = dailyWorkouts
+                break
             }
-            return dailyWorkouts.filter { $0.startDate >= startOfWeek && $0.startDate <= now }
+            filtered = dailyWorkouts.filter { $0.startDate >= startOfWeek && $0.startDate <= now }
         case .thisMonth:
             guard let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start else {
-                return dailyWorkouts
+                filtered = dailyWorkouts
+                break
             }
-            return dailyWorkouts.filter { $0.startDate >= startOfMonth && $0.startDate <= now }
+            filtered = dailyWorkouts.filter { $0.startDate >= startOfMonth && $0.startDate <= now }
         case .custom:
-            return dailyWorkouts.filter {
+            filtered = dailyWorkouts.filter {
                 $0.startDate >= customStartDate && $0.startDate <= customEndDate
             }
         }
+
+        // 常に日付昇順でソート
+        return filtered.sorted { $0.startDate < $1.startDate }
     }
 
     private var dateRangeLabel: String {
@@ -151,6 +160,15 @@ struct WorkoutRecordView: View {
                                     }
                                 }
                             }
+                            .onReceive(
+                                NotificationCenter.default.publisher(
+                                    for: .shouldShowCalendarIntegrationAlert)
+                            ) { _ in
+                                // 他のアラートが表示されていない場合のみ表示
+                                if !showSyncErrorAlert && !isShowCalendarIntegration {
+                                    showCalendarIntegrationPromptAlert = true
+                                }
+                            }
                         }
                         .onDelete(perform: deleteDailyWorkout)
                     }
@@ -189,13 +207,43 @@ struct WorkoutRecordView: View {
                     .zIndex(1)
                 }
                 .overlay {
-                    if dailyWorkouts.isEmpty {
-                        /// はじめての利用（まだ一度も記録がない場合）
-                        ContentUnavailableView(
-                            "トレーニング記録がありません",
-                            systemImage: "figure.run",
-                            description: Text("初めてのトレーニングを記録してみましょう！")
-                        )
+                    if filteredWorkouts.isEmpty {
+                        if dailyWorkouts.isEmpty {
+                            /// はじめての利用（まだ一度も記録がない場合）
+                            ContentUnavailableView(
+                                "トレーニング記録がありません",
+                                systemImage: "figure.run",
+                                description: Text("初めてのトレーニングを記録してみましょう！")
+                            )
+                        } else {
+                            /// フィルター適用時で結果が空の場合
+                            switch selectedFilter {
+                            case .thisWeek:
+                                ContentUnavailableView(
+                                    "今週のトレーニング記録がありません",
+                                    systemImage: "calendar.badge.plus",
+                                    description: Text("今週もがんばりましょう！新しい目標にチャレンジしてみませんか？")
+                                )
+                            case .thisMonth:
+                                ContentUnavailableView(
+                                    "今月のトレーニング記録がありません",
+                                    systemImage: "calendar.badge.plus",
+                                    description: Text("新たな月のスタートです！今月の目標を立ててトレーニングを始めましょう！")
+                                )
+                            case .custom:
+                                ContentUnavailableView(
+                                    "この期間のトレーニング記録がありません",
+                                    systemImage: "calendar.badge.exclamationmark",
+                                    description: Text("別の期間を選択してみてください。または新しくトレーニングを始めましょう！")
+                                )
+                            case .all:
+                                ContentUnavailableView(
+                                    "トレーニング記録がありません",
+                                    systemImage: "figure.run",
+                                    description: Text("初めてのトレーニングを記録してみましょう！")
+                                )
+                            }
+                        }
                     }
                 }
                 // シートを表示するためのモディファイア
@@ -287,6 +335,19 @@ struct WorkoutRecordView: View {
             if !hasShownCalendarIntegration {
                 isShowCalendarIntegration = true
             }
+
+            // 初回起動時の連携状態チェック
+            Task {
+                await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .active {
+                // フォアグラウンド復帰時に連携状態をチェック
+                Task {
+                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                }
+            }
         }
         // モーダルで連携画面を表示
         .sheet(isPresented: $isShowCalendarIntegration) {
@@ -311,6 +372,19 @@ struct WorkoutRecordView: View {
             }
         } message: {
             Text("もう一度サインインしてください。")
+        }
+        // カレンダー連携促進アラート
+        .alert("Googleカレンダーと連携しませんか？", isPresented: $showCalendarIntegrationPromptAlert) {
+            Button("連携する") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isShowCalendarIntegration = true
+                }
+            }
+            Button("後で連携", role: .cancel) {
+                showIntegrationBanner = true
+            }
+        } message: {
+            Text("トレーニング記録をGoogleカレンダーに同期することで、スケジュール管理がより便利になります。")
         }
     }
 
@@ -467,4 +541,6 @@ private func dateFromString(_ string: String) -> Date {
 extension Notification.Name {
     static let didStartSyncingWorkout = Notification.Name("didStartSyncingWorkout")
     static let didFinishSyncingWorkout = Notification.Name("didFinishSyncingWorkout")
+    static let shouldShowCalendarIntegrationAlert = Notification.Name(
+        "shouldShowCalendarIntegrationAlert")
 }
