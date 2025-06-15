@@ -29,6 +29,7 @@ struct WorkoutRecordView: View {
     @State var showDatePicker: Bool = false
     @State var savedDate: Date? = nil
     @State private var showCustomDateSheet = false
+    @State private var showCalendarHistory = false
 
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
@@ -176,7 +177,17 @@ struct WorkoutRecordView: View {
                 .navigationTitle("トレーニング一覧")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    EditButton()
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: {
+                            showCalendarHistory = true
+                        }) {
+                            Image(systemName: "calendar")
+                                .font(.title2)
+                        }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        EditButton()
+                    }
                 }
                 // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
@@ -385,6 +396,9 @@ struct WorkoutRecordView: View {
             }
         } message: {
             Text("トレーニング記録をGoogleカレンダーに同期することで、スケジュール管理がより便利になります。")
+        }
+        .sheet(isPresented: $showCalendarHistory) {
+            WorkoutCalendarHistoryView()
         }
     }
 
