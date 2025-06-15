@@ -65,7 +65,15 @@ struct SettingView: View {
                         }
                     }
                 }
-                Section("トレーニング管理") {
+
+                Section("App Settings") {
+                    Picker("テーマカラー", selection: $displayMode) {
+                        Text("ライト").tag(DisplayMode.light)
+                        Text("ダーク").tag(DisplayMode.dark)
+                        Text("システム").tag(DisplayMode.system)
+                    }
+                    .pickerStyle(.automatic)
+
                     Button(action: {
                         isShowingExerciseManagement = true
                     }) {
@@ -81,20 +89,6 @@ struct SettingView: View {
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
-                }
-                
-                Section("App Settings") {
-                    Text("アプリの設定")
-                    Picker("テーマカラー", selection: $displayMode) {
-                        Text("ライト").tag(DisplayMode.light)
-                        Text("ダーク").tag(DisplayMode.dark)
-                        Text("システム").tag(DisplayMode.system)
-                    }
-                    .pickerStyle(.automatic)
-                }
-                Section("Support") {
-                    Text("サポート")
-                    Text("問い合わせ先")
                 }
                 Section("About TrackFit") {
                     Text("Privacy Policy")

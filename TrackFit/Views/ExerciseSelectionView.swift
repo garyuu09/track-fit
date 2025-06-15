@@ -12,13 +12,14 @@ struct ExerciseSelectionView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var exerciseViewModel: ExerciseViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     let onExerciseSelected: (Exercise) -> Void
     @State private var searchText = ""
     @State private var isShowingExerciseManagement = false
 
     init(modelContext: ModelContext, onExerciseSelected: @escaping (Exercise) -> Void) {
-        self._exerciseViewModel = StateObject(wrappedValue: ExerciseViewModel(modelContext: modelContext))
+        self._exerciseViewModel = StateObject(
+            wrappedValue: ExerciseViewModel(modelContext: modelContext))
         self.onExerciseSelected = onExerciseSelected
     }
 
@@ -27,8 +28,8 @@ struct ExerciseSelectionView: View {
             return exerciseViewModel.exercises
         } else {
             return exerciseViewModel.exercises.filter { exercise in
-                exercise.name.localizedCaseInsensitiveContains(searchText) ||
-                exercise.category.localizedCaseInsensitiveContains(searchText)
+                exercise.name.localizedCaseInsensitiveContains(searchText)
+                    || exercise.category.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
@@ -46,15 +47,15 @@ struct ExerciseSelectionView: View {
                         Image(systemName: "dumbbell")
                             .font(.system(size: 60))
                             .foregroundColor(.secondary)
-                        
+
                         Text("トレーニング種目がありません")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        
+
                         Text("まずは種目を追加してください")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        
+
                         Button("種目を追加") {
                             isShowingExerciseManagement = true
                         }
@@ -106,7 +107,7 @@ struct ExerciseSelectionView: View {
             exerciseViewModel.fetchExercises()
         }
     }
-    
+
     private func exercisesForCategory(_ category: String) -> [Exercise] {
         return filteredExercises.filter { $0.category == category }
     }
@@ -123,7 +124,7 @@ struct ExerciseSelectionRowView: View {
                     Text(exercise.name)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     if !exercise.memo.isEmpty {
                         Text(exercise.memo)
                             .font(.caption)
@@ -131,9 +132,9 @@ struct ExerciseSelectionRowView: View {
                             .lineLimit(2)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)

@@ -16,6 +16,7 @@ TrackFit is a SwiftUI-based iOS fitness tracking application (iOS 18.0+) that al
 - **Automatic**: Swift-format runs automatically on each build via shell script
 - **Manual**: `xcrun swift-format format --in-place --recursive TrackFit/`
 - **Configuration**: Uses `.swift-format` with 100-character line length, 4-space indentation
+- **重要**: ファイル修正後は必ずswift-formatでフォーマットを実行すること
 
 ### Linting and Quality
 - Code formatting enforced via build phase script

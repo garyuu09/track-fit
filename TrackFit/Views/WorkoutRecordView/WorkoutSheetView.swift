@@ -20,8 +20,10 @@ struct WorkoutSheetView: View {
     @State private var editingRecord: WorkoutRecord? = nil
     @State private var isStartSheetPresented = false
     @State private var isEndSheetPresented = false
+    @State private var isAddingNewRecord = false
 
     @Environment(\.modelContext) private var context
+    @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
 
     // 2カラムのレイアウトでカード表示
     private let columns = [
@@ -76,19 +78,28 @@ struct WorkoutSheetView: View {
             }
             .frame(height: 190)
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    // ForEachに直接$daily.records.indicesを渡すと、バインドしやすい
-                    ForEach(daily.records.indices, id: \.self) { index in
-                        let record = daily.records[index]
-                        CardView(record: record)
-                            .onTapGesture {
-                                editingRecord = record
-                            }
+                if daily.records.isEmpty {
+                    ContentUnavailableView(
+                        "トレーニング記録がありません",
+                        systemImage: "dumbbell",
+                        description: Text("右下のボタンから種目を追加してトレーニングを記録しましょう！")
+                    )
+                    .padding(.top, 50)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        // ForEachに直接$daily.records.indicesを渡すと、バインドしやすい
+                        ForEach(daily.records.indices, id: \.self) { index in
+                            let record = daily.records[index]
+                            CardView(record: record)
+                                .onTapGesture {
+                                    editingRecord = record
+                                    isAddingNewRecord = false
+                                }
+                        }
                     }
+                    .padding()
                 }
                 Spacer()
-
-                    .padding()
             }
 
             Spacer()
@@ -98,44 +109,90 @@ struct WorkoutSheetView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("保存") {
-                    NotificationCenter.default.post(name: .didStartSyncingWorkout, object: daily.id)
-                    dismiss()
-                    Task {
-                        var isSaveLatestWorkout: Bool
-
-                        isSaveLatestWorkout = await viewModel.updateEvent(dailyWorkout: daily)
-                        if isSaveLatestWorkout {
-                            daily.isSyncedToCalendar = true
-                            try? context.save()
-                        } else {
-                            isSaveLatestWorkout = await viewModel.createEvent(dailyWorkout: daily)
-                            daily.isSyncedToCalendar = true
-                            try? context.save()
-                        }
+                    if isCalendarLinked {
+                        // カレンダー連携済みの場合の処理
                         NotificationCenter.default.post(
-                            name: .didFinishSyncingWorkout, object: daily.id)
+                            name: .didStartSyncingWorkout, object: daily.id)
+                        dismiss()
+                        Task { @MainActor in
+                            let isSaveLatestWorkout = await viewModel.updateEvent(
+                                dailyWorkout: daily)
+                            if isSaveLatestWorkout {
+                                daily.isSyncedToCalendar = true
+                                do {
+                                    try context.save()
+                                } catch {
+                                    print("データ保存エラー: \(error.localizedDescription)")
+                                    daily.isSyncedToCalendar = false
+                                }
+                            } else {
+                                // 更新失敗時は同期状態をfalseに設定
+                                daily.isSyncedToCalendar = false
+                                do {
+                                    try context.save()
+                                } catch {
+                                    print("データ保存エラー: \(error.localizedDescription)")
+                                }
+                            }
+                            NotificationCenter.default.post(
+                                name: .didFinishSyncingWorkout, object: daily.id)
+                        }
+                    } else {
+                        // カレンダー未連携の場合
+                        daily.isSyncedToCalendar = false
+                        do {
+                            try context.save()
+                        } catch {
+                            print("データ保存エラー: \(error.localizedDescription)")
+                        }
+                        dismiss()
+
+                        // 画面が完全に閉じられてからアラートを表示
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            NotificationCenter.default.post(
+                                name: .shouldShowCalendarIntegrationAlert, object: nil)
+                        }
                     }
                 }
             }
         }
-        // 編集用のシート（簡易実装）
+        // 編集用のシート
         .sheet(item: $editingRecord) { rec in
             EditWorkoutSheetView(
                 record: rec,
+                modelContext: context,
                 onSave: { updatedRec in
-                    // daily.records内の要素を更新
-                    if let idx = daily.records.firstIndex(where: { $0.id == updatedRec.id }) {
-                        daily.records[idx] = updatedRec
+                    if isAddingNewRecord {
+                        // 新規追加の場合
+                        daily.records.append(updatedRec)
+                        isAddingNewRecord = false
+                    } else {
+                        // 既存レコードの更新の場合
+                        if let idx = daily.records.firstIndex(where: { $0.id == updatedRec.id }) {
+                            daily.records[idx] = updatedRec
+                        }
                     }
                     editingRecord = nil
                 },
                 onDelete: {
-                    if let idx = daily.records.firstIndex(where: { $0.id == rec.id }) {
-                        daily.records.remove(at: idx)
+                    if isAddingNewRecord {
+                        // 新規追加中の削除は何もしない（まだdaily.recordsに追加されていない）
+                        isAddingNewRecord = false
+                    } else {
+                        // 既存レコードの削除
+                        if let idx = daily.records.firstIndex(where: { $0.id == rec.id }) {
+                            daily.records.remove(at: idx)
+                        }
                     }
                     editingRecord = nil
                 }
             )
+            .onDisappear {
+                // シートが閉じられた時（キャンセル時）の処理
+                if isAddingNewRecord {
+                    isAddingNewRecord = false
+                }
+            }
         }
         .overlay(
             VStack {
@@ -149,8 +206,8 @@ struct WorkoutSheetView: View {
                             reps: 10,
                             sets: 3
                         )
-                        daily.records.append(newRecord)
                         editingRecord = newRecord
+                        isAddingNewRecord = true
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 28))
@@ -171,52 +228,163 @@ struct WorkoutSheetView: View {
 struct CardView: View {
     let record: WorkoutRecord
 
+    private var iconName: String {
+        switch record.exerciseName {
+        case "ベンチプレス": return "figure.strengthtraining.traditional"
+        case "スクワット": return "figure.strengthtraining.functional"
+        case "デッドリフト": return "figure.barbell"
+        case "チェストプレス": return "figure.strengthtraining.traditional"
+        case "ラットプルダウン": return "figure.pullup"
+        default: return "dumbbell"
+        }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(record.exerciseName)
-                .font(.headline)
-
-            HStack {
-                Text("\(Int(record.weight)) kg")
-                Spacer()
-                Text("\(record.reps) 回")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Text(record.exerciseName)
+                    .font(.headline)
             }
-            .font(.subheadline)
 
-            Text("セット数: \(record.sets)")
-                .font(.footnote)
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: iconName)
+                    .font(.system(size: 30))
+                    .frame(width: 50, height: 50)
+                    .background(Color.accentColor.opacity(0.1))
+                    .foregroundColor(Color.accentColor)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "scalemass")
+                        Text("\(Int(record.weight)) kg")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.blue)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("\(record.reps) 回")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.green)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "number")
+                        Text("\(record.sets) セット")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(Color.orange)
+                }
+            }
         }
         .padding()
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
         )
-        .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 
-// MARK: - トレーニング編集用シート(種目選択機能付き)
+// MARK: - トレーニング編集用シート(Picker種目選択機能付き)
 struct EditWorkoutSheetView: View {
-    @State var record: WorkoutRecord
+    let originalRecord: WorkoutRecord
     @Environment(\.modelContext) private var modelContext
+    @StateObject private var exerciseViewModel: ExerciseViewModel
 
     var onSave: (WorkoutRecord) -> Void
     var onDelete: () -> Void
 
     @Environment(\.presentationMode) private var presentationMode
-    @State private var isShowingExerciseSelection = false
+    @State private var isShowingNewExercise = false
+    @State private var selectedExerciseName: String
+    @State private var isShowingWeightPicker = false
+    @State private var isShowingDeleteConfirmation = false
+
+    // 編集用の一時的な状態
+    @State private var editingExerciseName: String
+    @State private var editingWeight: Double
+    @State private var editingReps: Int
+    @State private var editingSets: Int
+
+    // 重量の選択肢（2.5kg刻み、2.5kg～200kg）
+    private var weightOptions: [Double] {
+        return Array(stride(from: 2.5, through: 200.0, by: 2.5))
+    }
+
+    init(
+        record: WorkoutRecord, modelContext: ModelContext,
+        onSave: @escaping (WorkoutRecord) -> Void, onDelete: @escaping () -> Void
+    ) {
+        self.originalRecord = record
+        self._exerciseViewModel = StateObject(
+            wrappedValue: ExerciseViewModel(modelContext: modelContext))
+        self.onSave = onSave
+        self.onDelete = onDelete
+        self._selectedExerciseName = State(
+            initialValue: record.exerciseName.isEmpty ? "種目を選択" : record.exerciseName)
+
+        // 編集用の一時状態を初期化
+        self._editingExerciseName = State(initialValue: record.exerciseName)
+        self._editingWeight = State(initialValue: record.weight)
+        self._editingReps = State(initialValue: record.reps)
+        self._editingSets = State(initialValue: record.sets)
+    }
+
+    private var exerciseOptions: [String] {
+        var options: [String] = []
+        if editingExerciseName.isEmpty {
+            options.append("種目を選択")
+        }
+        options.append(contentsOf: exerciseViewModel.exercises.map { $0.name }.sorted())
+        options.append("新しい種目を追加...")
+        return options
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("種目名")) {
+                Section(header: Label("種目名", systemImage: "figure.strengthtraining.traditional")) {
+                    Picker("種目を選択", selection: $selectedExerciseName) {
+                        ForEach(exerciseOptions, id: \.self) { exerciseName in
+                            if exerciseName == "新しい種目を追加..." {
+                                HStack {
+                                    Image(systemName: "plus.circle")
+                                    Text(exerciseName)
+                                }
+                                .foregroundColor(.blue)
+                                .tag(exerciseName)
+                            } else if exerciseName == "種目を選択" {
+                                Text(exerciseName)
+                                    .foregroundColor(.secondary)
+                                    .tag(exerciseName)
+                            } else {
+                                Text(exerciseName).tag(exerciseName)
+                            }
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedExerciseName) { _, newValue in
+                        if newValue == "新しい種目を追加..." {
+                            isShowingNewExercise = true
+                            // 選択を元に戻す
+                            selectedExerciseName =
+                                editingExerciseName.isEmpty ? "種目を選択" : editingExerciseName
+                        } else {
+                            editingExerciseName = newValue
+                            selectedExerciseName = newValue
+                        }
+                    }
+                }
+                Section(header: Label("重量(kg)", systemImage: "scalemass")) {
                     Button(action: {
-                        isShowingExerciseSelection = true
+                        isShowingWeightPicker = true
                     }) {
                         HStack {
-                            Text(record.exerciseName.isEmpty ? "種目を選択" : record.exerciseName)
-                                .foregroundColor(record.exerciseName.isEmpty ? .secondary : .primary)
+                            Text("\(editingWeight, specifier: "%.1f") kg")
+                                .foregroundColor(.primary)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption)
@@ -225,17 +393,31 @@ struct EditWorkoutSheetView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
-                Section(header: Text("重量(kg)")) {
-                    TextField("重量", value: $record.weight, format: .number)
-                        .keyboardType(.decimalPad)
+                Section(header: Label("回数", systemImage: "arrow.triangle.2.circlepath")) {
+                    HStack {
+                        Spacer()
+                        Stepper(
+                            value: $editingReps,
+                            in: 1...100,
+                            step: 1
+                        ) {
+                            Text("\(editingReps) 回")
+                                .foregroundColor(.primary)
+                        }
+                    }
                 }
-                Section(header: Text("回数")) {
-                    TextField("回数", value: $record.reps, format: .number)
-                        .keyboardType(.numberPad)
-                }
-                Section(header: Text("セット数")) {
-                    TextField("セット数", value: $record.sets, format: .number)
-                        .keyboardType(.numberPad)
+                Section(header: Label("セット数", systemImage: "number")) {
+                    HStack {
+                        Spacer()
+                        Stepper(
+                            value: $editingSets,
+                            in: 1...20,
+                            step: 1
+                        ) {
+                            Text("\(editingSets) セット")
+                                .foregroundColor(.primary)
+                        }
+                    }
                 }
 
                 Section {
@@ -243,7 +425,10 @@ struct EditWorkoutSheetView: View {
                         onDelete()
                         presentationMode.wrappedValue.dismiss()
                     } label: {
-                        Text("このトレーニングを削除")
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("このトレーニングを削除")
+                        }
                     }
                 }
             }
@@ -254,16 +439,94 @@ struct EditWorkoutSheetView: View {
                     presentationMode.wrappedValue.dismiss()
                 },
                 trailing: Button("保存") {
-                    onSave(record)
+                    // 編集された値でレコードを更新
+                    let updatedRecord = WorkoutRecord(
+                        exerciseName: editingExerciseName,
+                        weight: editingWeight,
+                        reps: editingReps,
+                        sets: editingSets
+                    )
+                    updatedRecord.id = originalRecord.id
+                    onSave(updatedRecord)
                     presentationMode.wrappedValue.dismiss()
                 }
             )
-            .sheet(isPresented: $isShowingExerciseSelection) {
-                ExerciseSelectionView(modelContext: modelContext) { selectedExercise in
-                    record.exerciseName = selectedExercise.name
+            .sheet(isPresented: $isShowingNewExercise) {
+                ExerciseFormView(
+                    title: "新しい種目を追加",
+                    exercise: nil,
+                    onSave: { name, category, memo in
+                        exerciseViewModel.addExercise(name: name, category: category, memo: memo)
+                        exerciseViewModel.fetchExercises()
+                        selectedExerciseName = name
+                        editingExerciseName = name
+                    },
+                    onDelete: nil
+                )
+            }
+            .sheet(isPresented: $isShowingWeightPicker) {
+                WeightPickerSheet(weight: $editingWeight, weightOptions: weightOptions)
+            }
+            .alert("種目を削除", isPresented: $isShowingDeleteConfirmation) {
+                Button("削除", role: .destructive) {
+                    deleteCurrentExercise()
+                }
+                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("種目「\(editingExerciseName)」を削除しますか？\nこの操作は元に戻せません。")
+            }
+            .onAppear {
+                exerciseViewModel.fetchExercises()
+            }
+        }
+    }
+
+    // 種目削除処理
+    private func deleteCurrentExercise() {
+        if let exerciseToDelete = exerciseViewModel.exercises.first(where: {
+            $0.name == editingExerciseName
+        }) {
+            exerciseViewModel.deleteExercise(exerciseToDelete)
+            exerciseViewModel.fetchExercises()
+
+            // 削除後は種目選択をリセット
+            editingExerciseName = ""
+            selectedExerciseName = "種目を選択"
+        }
+    }
+}
+
+// MARK: - 重量選択用シート
+struct WeightPickerSheet: View {
+    @Binding var weight: Double
+    let weightOptions: [Double]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            VStack {
+                Picker("重量を選択", selection: $weight) {
+                    ForEach(weightOptions, id: \.self) { weightOption in
+                        Text("\(weightOption, specifier: "%.1f") kg")
+                            .tag(weightOption)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxHeight: 300)
+
+                Spacer()
+            }
+            .navigationTitle("重量を選択")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完了") {
+                        dismiss()
+                    }
                 }
             }
         }
+        .presentationDetents([.fraction(0.4)])
     }
 }
 

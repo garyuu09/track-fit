@@ -61,10 +61,13 @@ class WorkoutViewModel: ObservableObject {
 
             try await GoogleCalendarAPI.updateWorkoutEvent(
                 accessToken: accessToken, eventId: eid, workout: dailyWorkout)
+
+            isLoading = false
+            return true
         } catch {
             self.errorMessage = error.localizedDescription
+            isLoading = false
             return false
         }
-        return true
     }
 }
