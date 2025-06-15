@@ -21,12 +21,7 @@ struct ExerciseManagementView: View {
     var body: some View {
         NavigationView {
             List {
-                if exerciseViewModel.categories.isEmpty {
-                    Text("トレーニング種目がありません")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
-                } else {
+                if !exerciseViewModel.categories.isEmpty {
                     ForEach(exerciseViewModel.categories, id: \.self) { category in
                         Section(category) {
                             ForEach(exerciseViewModel.exercises(for: category)) { exercise in
@@ -45,6 +40,15 @@ struct ExerciseManagementView: View {
                             }
                         }
                     }
+                }
+            }
+            .overlay {
+                if exerciseViewModel.categories.isEmpty {
+                    ContentUnavailableView(
+                        "トレーニング種目がありません",
+                        systemImage: "dumbbell",
+                        description: Text("種目を追加してトレーニングを始めましょう！右上のボタンから新しい種目を追加できます。")
+                    )
                 }
             }
             .navigationTitle("種目管理")
@@ -68,7 +72,8 @@ struct ExerciseManagementView: View {
                 exercise: nil,
                 onSave: { name, category, memo in
                     exerciseViewModel.addExercise(name: name, category: category, memo: memo)
-                }
+                },
+                onDelete: nil
             )
         }
         .sheet(isPresented: $exerciseViewModel.isShowingEditExercise) {
@@ -79,6 +84,11 @@ struct ExerciseManagementView: View {
                     onSave: { name, category, memo in
                         exerciseViewModel.updateExercise(
                             exercise, name: name, category: category, memo: memo)
+                    },
+                    onDelete: {
+                        exerciseViewModel.deleteExercise(exercise)
+                        exerciseViewModel.selectedExercise = nil
+                        exerciseViewModel.isShowingEditExercise = false
                     }
                 )
             }
@@ -120,10 +130,12 @@ struct ExerciseFormView: View {
     let title: String
     let exercise: Exercise?
     let onSave: (String, String, String) -> Void
+    let onDelete: (() -> Void)?
 
     @State private var name: String = ""
     @State private var category: String = ""
     @State private var memo: String = ""
+    @State private var isShowingDeleteConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
     // よく使われるカテゴリの候補
@@ -142,30 +154,57 @@ struct ExerciseFormView: View {
                             .font(.headline)
                         TextField("カテゴリ", text: $category)
 
+                        Text("よく使われるカテゴリ")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
                         LazyVGrid(
                             columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8
                         ) {
                             ForEach(commonCategories, id: \.self) { commonCategory in
-                                Button(commonCategory) {
+                                Button(action: {
                                     category = commonCategory
+                                }) {
+                                    Text(commonCategory)
+                                        .font(.caption)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .frame(maxWidth: .infinity)
+                                        .background(
+                                            category == commonCategory
+                                                ? Color.blue : Color.gray.opacity(0.2)
+                                        )
+                                        .foregroundColor(
+                                            category == commonCategory ? .white : .primary
+                                        )
+                                        .cornerRadius(8)
                                 }
-                                .font(.caption)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    category == commonCategory
-                                        ? Color.blue : Color.gray.opacity(0.2)
-                                )
-                                .foregroundColor(category == commonCategory ? .white : .primary)
-                                .cornerRadius(8)
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                     }
                 }
-
                 Section("メモ") {
                     TextField("メモ（任意）", text: $memo, axis: .vertical)
                         .lineLimit(3...6)
+                }
+
+                // 削除ボタン（編集時のみ表示）
+                if exercise != nil, onDelete != nil {
+                    Section {
+                        Button(action: {
+                            isShowingDeleteConfirmation = true
+                        }) {
+                            HStack {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                                Text("この種目を削除")
+                                    .foregroundColor(.red)
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
                 }
             }
             .navigationTitle(title)
@@ -184,6 +223,15 @@ struct ExerciseFormView: View {
                     .disabled(name.isEmpty || category.isEmpty)
                 }
             }
+        }
+        .alert("種目を削除", isPresented: $isShowingDeleteConfirmation) {
+            Button("削除", role: .destructive) {
+                onDelete?()
+                dismiss()
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("種目「\(name)」を削除しますか？\nこの操作は元に戻せません。")
         }
         .onAppear {
             if let exercise = exercise {
