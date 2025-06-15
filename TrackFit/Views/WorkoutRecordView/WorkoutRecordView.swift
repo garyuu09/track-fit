@@ -82,7 +82,7 @@ struct WorkoutRecordView: View {
             return "今月の記録"
         case .custom:
             return
-                "\(formattedDate(date: customStartDate)) 〜 \(formattedDate(date: customEndDate)) の記録"
+                "\(DateHelper.formattedDate(customStartDate)) 〜 \(DateHelper.formattedDate(customEndDate)) の記録"
         }
     }
 
@@ -404,7 +404,7 @@ struct WorkoutRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(formattedDate(date: daily.startDate))
+                Text(DateHelper.formattedDate(daily.startDate))
                     .font(.headline)
 
                 Spacer()
@@ -515,15 +515,6 @@ struct CustomDatePicker: View {
             .padding(.horizontal, 20)
         }
     }
-}
-
-/// Date を "yyyy/MM/dd" 形式の文字列に変換する関数
-func formattedDate(date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.calendar = Calendar(identifier: .gregorian)  // 西暦を使う
-    formatter.locale = Locale(identifier: "ja_JP")  // 日本語ロケール
-    formatter.dateFormat = "yyyy/MM/dd"  // 表示形式
-    return formatter.string(from: date)
 }
 
 // MARK: - ヘルパー

@@ -41,10 +41,8 @@ struct WorkoutSheetView: View {
                         HStack {
                             Text("開始日時")
                             Spacer()
-                            Text(
-                                "\(daily.startDate, style: .date) \(daily.startDate, style: .time)"
-                            )
-                            .foregroundColor(.secondary)
+                            Text(DateHelper.formattedDateTime(daily.startDate))
+                                .foregroundColor(.secondary)
                         }
                     }
                     .sheet(isPresented: $isStartSheetPresented) {
@@ -61,7 +59,7 @@ struct WorkoutSheetView: View {
                         HStack {
                             Text("終了日時")
                             Spacer()
-                            Text("\(daily.endDate, style: .date) \(daily.endDate, style: .time)")
+                            Text(DateHelper.formattedDateTime(daily.endDate))
                                 .foregroundColor(.secondary)
                         }
                     }

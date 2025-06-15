@@ -53,12 +53,9 @@ struct GoogleCalendarAPI {
         workout: DailyWorkout
     ) async throws -> String {
 
-        // 1) イベント開始・終了時刻をISO8601文字列に変換 (例: 1時間の枠を確保)
-        //   ここでは簡易的に「開始=ユーザー選択のDate」「終了=+1時間」として例示します
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)  // UTC
-        let startString = dateFormatter.string(from: workout.startDate)
-        let endString = dateFormatter.string(from: workout.endDate)
+        // 1) イベント開始・終了時刻をISO8601文字列に変換
+        let startString = DateHelper.iso8601String(from: workout.startDate)
+        let endString = DateHelper.iso8601String(from: workout.endDate)
 
         // 2) イベントの要素をJSONに組み立て
         // 各レコードの詳細を文字列に変換し、改行で結合
@@ -138,12 +135,9 @@ struct GoogleCalendarAPI {
         eventId: String,
         workout: DailyWorkout
     ) async throws {
-        // 1) イベント開始・終了時刻をISO8601文字列に変換 (例: 1時間の枠を確保)
-        //   ここでは簡易的に「開始=ユーザー選択のDate」「終了=+1時間」として例示します
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)  // UTC
-        let startString = dateFormatter.string(from: workout.startDate)
-        let endString = dateFormatter.string(from: workout.endDate)
+        // 1) イベント開始・終了時刻をISO8601文字列に変換
+        let startString = DateHelper.iso8601String(from: workout.startDate)
+        let endString = DateHelper.iso8601String(from: workout.endDate)
         // 2) イベントの要素をJSONに組み立て
         // 各レコードの詳細を文字列に変換し、改行で結合
         let descriptionText = workout.records.map { record in
