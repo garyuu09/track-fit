@@ -251,6 +251,59 @@ struct GoogleCalendarAPI {
         }
     }
 
+    // アクセストークンの有効性チェック
+    static func validateAccessToken(accessToken: String) async -> Bool {
+        guard
+            let url = URL(
+                string: "https://www.googleapis.com/calendar/v3/calendars/primary"
+            )
+        else {
+            return false
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse {
+                return (200..<300).contains(httpResponse.statusCode)
+            }
+        } catch {
+            print("トークン検証エラー: \(error.localizedDescription)")
+        }
+        return false
+    }
+
+    // 連携状態の自動チェックと更新
+    static func checkAndUpdateLinkingStatus() async {
+        guard let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken"),
+            !accessToken.isEmpty
+        else {
+            // トークンが存在しない場合は連携解除状態に設定
+            await MainActor.run {
+                UserDefaults.standard.set(false, forKey: "isCalendarLinked")
+                UserDefaults.standard.set(true, forKey: "showIntegrationBanner")
+            }
+            return
+        }
+
+        let isValid = await validateAccessToken(accessToken: accessToken)
+        await MainActor.run {
+            if !isValid {
+                // トークンが無効な場合は連携解除処理を実行
+                unlinkGoogleCalendar()
+                UserDefaults.standard.set(false, forKey: "isCalendarLinked")
+                UserDefaults.standard.set(true, forKey: "showIntegrationBanner")
+                print("アクセストークンが無効のため連携を解除しました")
+            } else {
+                // トークンが有効な場合は連携状態を確認
+                UserDefaults.standard.set(true, forKey: "isCalendarLinked")
+            }
+        }
+    }
+
     // Googleカレンダーとの連携解除処理
     static func unlinkGoogleCalendar() {
         // Googleサインアウト処理
