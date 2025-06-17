@@ -118,7 +118,7 @@ struct ExerciseRowView: View {
             Spacer()
             Button(action: onEdit) {
                 Image(systemName: "pencil")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -172,7 +172,7 @@ struct ExerciseFormView: View {
                                         .frame(maxWidth: .infinity)
                                         .background(
                                             category == commonCategory
-                                                ? Color.blue : Color.gray.opacity(0.2)
+                                                ? Color.accentColor : Color.gray.opacity(0.2)
                                         )
                                         .foregroundColor(
                                             category == commonCategory ? .white : .primary

@@ -372,7 +372,7 @@ struct EditWorkoutSheetView: View {
                                     Image(systemName: "plus.circle")
                                     Text(exerciseName)
                                 }
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                                 .tag(exerciseName)
                             } else if exerciseName == "種目を選択" {
                                 Text(exerciseName)

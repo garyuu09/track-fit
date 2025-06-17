@@ -83,7 +83,7 @@ struct CalendarHistoryHeaderView: View {
             Button(action: previousMonth) {
                 Image(systemName: "chevron.left")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
 
             Spacer()
@@ -97,7 +97,7 @@ struct CalendarHistoryHeaderView: View {
             Button(action: nextMonth) {
                 Image(systemName: "chevron.right")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
         }
         .padding(.horizontal)
@@ -243,7 +243,7 @@ struct CalendarHistoryDateCell: View {
 
                 if hasWorkout {
                     Circle()
-                        .fill(isSelected ? Color.white : Color.blue)
+                        .fill(isSelected ? Color.white : Color.accentColor)
                         .frame(width: 6, height: 6)
                 } else {
                     Spacer()
@@ -265,7 +265,7 @@ struct CalendarHistoryDateCell: View {
         if isSelected {
             return .white
         } else if isToday {
-            return .blue
+            return .accentColor
         } else if !isCurrentMonth {
             return .secondary
         } else {
@@ -275,9 +275,9 @@ struct CalendarHistoryDateCell: View {
 
     private var backgroundColor: Color {
         if isSelected {
-            return .blue
+            return .accentColor
         } else if isToday {
-            return .blue.opacity(0.1)
+            return .accentColor.opacity(0.1)
         } else {
             return .clear
         }
@@ -285,7 +285,7 @@ struct CalendarHistoryDateCell: View {
 
     private var borderColor: Color {
         if isToday && !isSelected {
-            return .blue
+            return .accentColor
         } else {
             return .clear
         }

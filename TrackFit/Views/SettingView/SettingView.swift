@@ -78,14 +78,12 @@ struct SettingView: View {
                         isShowingExerciseManagement = true
                     }) {
                         HStack {
-                            Image(systemName: "dumbbell")
-                                .foregroundColor(.blue)
                             Text("種目管理")
                                 .foregroundColor(.primary)
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.accentColor)
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
