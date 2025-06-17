@@ -126,7 +126,7 @@ struct WorkoutRecordView: View {
                                                 .underline()
                                         }
                                         .font(.caption)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                     }
                                 } else {
                                     Text(dateRangeLabel)
@@ -207,7 +207,7 @@ struct WorkoutRecordView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
-                        .background(Color.blue)
+                        .background(Color.accentColor)
                         .clipShape(Capsule())
                         .shadow(
                             color: Color.black.opacity(0.2),

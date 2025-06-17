@@ -41,7 +41,7 @@ struct GoogleCalendarIntegrationView: View {
                         Group {
                             HStack(alignment: .top) {
                                 Image(systemName: "1.circle.fill")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundStyle(Color.accentColor)
                                 VStack(alignment: .leading) {
                                     Text("カレンダーと接続")
                                         .font(.headline)
