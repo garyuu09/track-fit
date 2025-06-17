@@ -20,6 +20,13 @@ struct SettingView: View {
     @State private var showIntegrationBanner: Bool = false
     @State private var isShowingExerciseManagement = false
     @Environment(\.modelContext) private var modelContext
+    let version =
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+        ?? "Unknown"
+    #if DEBUG
+        let build =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -92,6 +99,27 @@ struct SettingView: View {
                     Text("Privacy Policy")
                     Text("TrackFitをレビューする")
 
+                }
+                Section {
+                } footer: {
+                    VStack(
+                        alignment: .center,
+                        content: {
+                            VStack {
+                                Text("©TrackFit")
+                                    .font(.caption)
+                                HStack(spacing: 0) {
+                                    Text("Ver. \(version)")
+                                        .font(.caption2)
+                                    #if DEBUG
+                                        Text("(\(build))")
+                                            .font(.caption2)
+                                    #endif
+                                }
+                            }
+                        }
+                    )
+                    .frame(maxWidth: .infinity)
                 }
             }
             .navigationTitle("設定")
