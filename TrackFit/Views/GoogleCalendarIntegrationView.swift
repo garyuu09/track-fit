@@ -89,10 +89,12 @@ struct GoogleCalendarIntegrationView: View {
                         Button {
                             Task {
                                 let success = try await GoogleCalendarAPI.linkGoogleCalendar()
-                                if success {
-                                    onFinish(true)
-                                    showIntegrationBanner = false
-                                    print("showIntegrationBanner: \(showIntegrationBanner)")
+                                await MainActor.run {
+                                    if success {
+                                        onFinish(true)
+                                        showIntegrationBanner = false
+                                        print("showIntegrationBanner: \(showIntegrationBanner)")
+                                    }
                                 }
                             }
                         } label: {

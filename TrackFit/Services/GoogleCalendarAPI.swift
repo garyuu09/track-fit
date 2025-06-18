@@ -208,11 +208,19 @@ struct GoogleCalendarAPI {
 
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
 
-            guard
-                let windowScene = await UIApplication.shared.connectedScenes.first
-                    as? UIWindowScene,
-                let rootViewController = await windowScene.windows.first?.rootViewController
-            else {
+            let rootViewController = await MainActor.run { () -> UIViewController? in
+                guard
+                    let windowScene = UIApplication.shared.connectedScenes.first
+                        as? UIWindowScene,
+                    let window = windowScene.windows.first,
+                    let rootViewController = window.rootViewController
+                else {
+                    return nil
+                }
+                return rootViewController
+            }
+
+            guard let rootViewController = rootViewController else {
                 return false
             }
 

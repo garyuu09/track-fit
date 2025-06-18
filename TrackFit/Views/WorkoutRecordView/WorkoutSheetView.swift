@@ -113,8 +113,22 @@ struct WorkoutSheetView: View {
                             name: .didStartSyncingWorkout, object: daily.id)
                         dismiss()
                         Task { @MainActor in
-                            let isSaveLatestWorkout = await viewModel.updateEvent(
-                                dailyWorkout: daily)
+                            var isSaveLatestWorkout: Bool
+
+                            // eventIdの有無で新規作成か更新かを判定
+                            if daily.eventId == nil {
+                                // 新規作成
+                                isSaveLatestWorkout = await viewModel.createEvent(
+                                    dailyWorkout: daily)
+                                if isSaveLatestWorkout, let newEventId = viewModel.eventId {
+                                    daily.eventId = newEventId
+                                }
+                            } else {
+                                // 既存イベントの更新
+                                isSaveLatestWorkout = await viewModel.updateEvent(
+                                    dailyWorkout: daily)
+                            }
+
                             if isSaveLatestWorkout {
                                 daily.isSyncedToCalendar = true
                                 do {
@@ -124,12 +138,17 @@ struct WorkoutSheetView: View {
                                     daily.isSyncedToCalendar = false
                                 }
                             } else {
-                                // 更新失敗時は同期状態をfalseに設定
+                                // 同期失敗時は同期状態をfalseに設定
                                 daily.isSyncedToCalendar = false
                                 do {
                                     try context.save()
                                 } catch {
                                     print("データ保存エラー: \(error.localizedDescription)")
+                                }
+
+                                // エラー詳細をコンソールに出力
+                                if let errorMsg = viewModel.errorMessage {
+                                    print("Google Calendar同期エラー: \(errorMsg)")
                                 }
                             }
                             NotificationCenter.default.post(

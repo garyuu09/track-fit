@@ -129,7 +129,7 @@ struct SettingView: View {
                 Task {
                     await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
                     // チェック後に最新状態を再読み込み
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         loadLinkedStatus()
                     }
                 }
