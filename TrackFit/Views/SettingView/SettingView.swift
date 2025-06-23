@@ -96,7 +96,9 @@ struct SettingView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
                 Section("About TrackFit") {
-                    Text("Privacy Policy")
+                    NavigationLink(destination: PrivacyPolicyView()) {
+                        Text("プライバシーポリシー")
+                    }
                     Text("TrackFitをレビューする")
 
                 }
@@ -181,6 +183,7 @@ struct SettingView: View {
         }
     }
 }
+
 #Preview {
     SettingView()
 }
