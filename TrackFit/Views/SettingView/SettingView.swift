@@ -13,6 +13,7 @@ enum DisplayMode: String {
 
 struct SettingView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = .system
+    @AppStorage("isCalendarFeatureEnabled") private var isCalendarFeatureEnabled: Bool = true
     @State private var isGoogleCalendarLinked: Bool = false
     @State private var linkedAccountEmail: String? = nil
     @State private var accessToken: String? = nil
@@ -32,43 +33,66 @@ struct SettingView: View {
         NavigationStack {
             Form {
                 Section(header: Text("外部連携")) {
+                    // カレンダー機能のオンオフトグル
                     HStack {
-                        Text("Googleカレンダー")
+                        Text("カレンダー連携機能")
                         Spacer()
-                        if isGoogleCalendarLinked, let email = linkedAccountEmail {
-                            HStack(alignment: .top, spacing: 12) {
-                                Image(systemName: "calendar.circle.fill")
-                                    .foregroundColor(.green)
-                                    .font(.title3)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Googleカレンダーと連携中")
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.green)
-
-                                    Text(email)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-
-                                    Button("連携を解除") {
+                        Toggle("", isOn: $isCalendarFeatureEnabled)
+                            .onChange(of: isCalendarFeatureEnabled) { _, newValue in
+                                if !newValue {
+                                    // 機能をオフにした場合、連携も解除
+                                    if isGoogleCalendarLinked {
                                         GoogleCalendarAPI.unlinkGoogleCalendar()
                                         UserDefaults.standard.set(false, forKey: "isCalendarLinked")
                                         isGoogleCalendarLinked = false
-                                        UserDefaults.standard.set(
-                                            true, forKey: "showIntegrationBanner")
                                         linkedAccountEmail = nil
                                         accessToken = nil
                                     }
-                                    .font(.caption)
-                                    .foregroundColor(.red)
                                 }
                             }
-                        } else {
-                            Button("連携する") {
-                                isShowCalendarIntegration = true
+                    }
+
+                    // カレンダー機能が有効な場合のみGoogleカレンダー連携を表示
+                    if isCalendarFeatureEnabled {
+                        HStack {
+                            Text("Googleカレンダー")
+                            Spacer()
+                            if isGoogleCalendarLinked, let email = linkedAccountEmail {
+                                HStack(alignment: .top, spacing: 12) {
+                                    Image(systemName: "calendar.circle.fill")
+                                        .foregroundColor(.green)
+                                        .font(.title3)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Googleカレンダーと連携中")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.green)
+
+                                        Text(email)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+
+                                        Button("連携を解除") {
+                                            GoogleCalendarAPI.unlinkGoogleCalendar()
+                                            UserDefaults.standard.set(
+                                                false, forKey: "isCalendarLinked")
+                                            isGoogleCalendarLinked = false
+                                            UserDefaults.standard.set(
+                                                true, forKey: "showIntegrationBanner")
+                                            linkedAccountEmail = nil
+                                            accessToken = nil
+                                        }
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                    }
+                                }
+                            } else {
+                                Button("連携する") {
+                                    isShowCalendarIntegration = true
+                                }
+                                .buttonStyle(.borderedProminent)
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
                 }
@@ -126,18 +150,25 @@ struct SettingView: View {
             }
             .navigationTitle("設定")
             .onAppear {
-                loadLinkedStatus()
-                // 連携状態の最新チェック
-                Task {
-                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
-                    // チェック後に最新状態を再読み込み
-                    await MainActor.run {
-                        loadLinkedStatus()
+                if isCalendarFeatureEnabled {
+                    loadLinkedStatus()
+                    // 連携状態の最新チェック
+                    Task {
+                        await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                        // チェック後に最新状態を再読み込み
+                        await MainActor.run {
+                            loadLinkedStatus()
+                        }
                     }
                 }
             }
-            // モーダルで連携画面を表示
-            .sheet(isPresented: $isShowCalendarIntegration) {
+            // モーダルで連携画面を表示（カレンダー機能が有効な場合のみ）
+            .sheet(
+                isPresented: Binding(
+                    get: { isShowCalendarIntegration && isCalendarFeatureEnabled },
+                    set: { isShowCalendarIntegration = $0 }
+                )
+            ) {
                 GoogleCalendarIntegrationView(
                     onFinish: { didLink in
                         if didLink {
@@ -150,7 +181,9 @@ struct SettingView: View {
                         }
                         isShowCalendarIntegration = false
                         // 連携状態を再読み込みして最新状態を反映
-                        loadLinkedStatus()
+                        if isCalendarFeatureEnabled {
+                            loadLinkedStatus()
+                        }
                     },
                     showIntegrationBanner: $showIntegrationBanner
                 )
