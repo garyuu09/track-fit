@@ -10,6 +10,8 @@ struct WorkoutRecordView: View {
         var id: String { self.rawValue }
     }
 
+    // カレンダー機能の有効/無効状態
+    @AppStorage("isCalendarFeatureEnabled") private var isCalendarFeatureEnabled: Bool = true
     // 「連携画面を見たか？」のフラグを永続化
     @AppStorage("hasShownCalendarIntegration") private var hasShownCalendarIntegration: Bool = false
     // Googleカレンダー連携状態
@@ -99,11 +101,11 @@ struct WorkoutRecordView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
 
-                // MARK: Googleカレンダー未連携バナー
+                // MARK: Googleカレンダー未連携バナー（カレンダー機能が有効な場合のみ表示）
                 /// 永続化している`isCalendarLinked`と`hasShownCalendarIntegration`をチェック
                 /// `isCalendarLinked`: Googleカレンダーとの連携状態（`true`のとき、Googleカレンダーと連携中）
                 ///`hasShownCalendarIntegration`: 「連携画面を見たか？」のフラグを永続化（`true`のとき、連携画面を一度以上表示済み）
-                if !isCalendarLinked || !hasShownCalendarIntegration {
+                if isCalendarFeatureEnabled && (!isCalendarLinked || !hasShownCalendarIntegration) {
                     if showIntegrationBanner {
                         AlertBannerView(
                             isShowCalendarIntegration: $isShowCalendarIntegration,
@@ -138,8 +140,10 @@ struct WorkoutRecordView: View {
                         ForEach(filteredWorkouts) { daily in
                             NavigationLink(destination: WorkoutSheetView(daily: daily)) {
                                 WorkoutRow(
-                                    daily: daily, isSyncing: syncingWorkoutIDs.contains(daily.id),
-                                    showSyncErrorAlert: $showSyncErrorAlert
+                                    daily: daily,
+                                    isSyncing: syncingWorkoutIDs.contains(daily.id),
+                                    showSyncErrorAlert: $showSyncErrorAlert,
+                                    isCalendarFeatureEnabled: isCalendarFeatureEnabled
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.vertical, 8)
@@ -342,26 +346,34 @@ struct WorkoutRecordView: View {
             }
         }
         .onAppear {
-            // 初回起動ならモーダルを出す
-            if !hasShownCalendarIntegration {
-                isShowCalendarIntegration = true
-            }
+            // カレンダー機能が有効な場合のみ実行
+            if isCalendarFeatureEnabled {
+                // 初回起動ならモーダルを出す
+                if !hasShownCalendarIntegration {
+                    isShowCalendarIntegration = true
+                }
 
-            // 初回起動時の連携状態チェック
-            Task {
-                await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
-            }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                // フォアグラウンド復帰時に連携状態をチェック
+                // 初回起動時の連携状態チェック
                 Task {
                     await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
                 }
             }
         }
-        // モーダルで連携画面を表示
-        .sheet(isPresented: $isShowCalendarIntegration) {
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active && isCalendarFeatureEnabled {
+                // フォアグラウンド復帰時に連携状態をチェック（カレンダー機能が有効な場合のみ）
+                Task {
+                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                }
+            }
+        }
+        // モーダルで連携画面を表示（カレンダー機能が有効な場合のみ）
+        .sheet(
+            isPresented: Binding(
+                get: { isShowCalendarIntegration && isCalendarFeatureEnabled },
+                set: { isShowCalendarIntegration = $0 }
+            )
+        ) {
             GoogleCalendarIntegrationView(
                 onFinish: { didLink in
                     if didLink {
@@ -373,8 +385,14 @@ struct WorkoutRecordView: View {
                 showIntegrationBanner: $showIntegrationBanner
             )
         }
-        // 連携失敗アラート
-        .alert("連携に失敗しました", isPresented: $showSyncErrorAlert) {
+        // 連携失敗アラート（カレンダー機能が有効な場合のみ）
+        .alert(
+            "連携に失敗しました",
+            isPresented: Binding(
+                get: { showSyncErrorAlert && isCalendarFeatureEnabled },
+                set: { showSyncErrorAlert = $0 }
+            )
+        ) {
             Button("再連携") {
                 isShowCalendarIntegration = true
             }
@@ -384,8 +402,14 @@ struct WorkoutRecordView: View {
         } message: {
             Text("もう一度サインインしてください。")
         }
-        // カレンダー連携促進アラート
-        .alert("Googleカレンダーと連携しませんか？", isPresented: $showCalendarIntegrationPromptAlert) {
+        // カレンダー連携促進アラート（カレンダー機能が有効な場合のみ）
+        .alert(
+            "Googleカレンダーと連携しませんか？",
+            isPresented: Binding(
+                get: { showCalendarIntegrationPromptAlert && isCalendarFeatureEnabled },
+                set: { showCalendarIntegrationPromptAlert = $0 }
+            )
+        ) {
             Button("連携する") {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     isShowCalendarIntegration = true
@@ -414,6 +438,7 @@ struct WorkoutRow: View {
     let daily: DailyWorkout
     let isSyncing: Bool
     @Binding var showSyncErrorAlert: Bool
+    let isCalendarFeatureEnabled: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -423,40 +448,43 @@ struct WorkoutRow: View {
 
                 Spacer()
 
-                if isSyncing {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                        Text("連携中…")
+                // カレンダー機能が有効な場合のみ同期状態を表示
+                if isCalendarFeatureEnabled {
+                    if isSyncing {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("連携中…")
+                        }
+                        .font(.footnote)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    } else if daily.isSyncedToCalendar {
+                        HStack(spacing: 15) {
+                            Image(systemName: "calendar.badge.checkmark")
+                            Text("連携済み")
+                        }
+                        .font(.footnote)
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.green, lineWidth: 1)
+                        )
+                    } else {
+                        HStack(spacing: 15) {
+                            Image(systemName: "calendar.badge.exclamationmark")
+                            Text("未連携")
+                        }
+                        .font(.footnote)
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.red, lineWidth: 1)
+                        )
                     }
-                    .font(.footnote)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                } else if daily.isSyncedToCalendar {
-                    HStack(spacing: 15) {
-                        Image(systemName: "calendar.badge.checkmark")
-                        Text("連携済み")
-                    }
-                    .font(.footnote)
-                    .foregroundColor(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.green, lineWidth: 1)
-                    )
-                } else {
-                    HStack(spacing: 15) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                        Text("未連携")
-                    }
-                    .font(.footnote)
-                    .foregroundColor(.red)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.red, lineWidth: 1)
-                    )
                 }
             }
 

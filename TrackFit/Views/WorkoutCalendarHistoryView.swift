@@ -12,6 +12,7 @@ import SwiftUI
 struct WorkoutCalendarHistoryView: View {
     @Query(sort: \DailyWorkout.startDate, order: .forward) private var dailyWorkouts: [DailyWorkout]
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("isCalendarFeatureEnabled") private var isCalendarFeatureEnabled: Bool = true
 
     @State private var currentMonth = Date()
     @State private var selectedDate: Date?
@@ -38,7 +39,9 @@ struct WorkoutCalendarHistoryView: View {
 
                 // 選択した日のワークアウト詳細
                 if let selectedWorkout = selectedWorkout {
-                    SelectedWorkoutDetailView(workout: selectedWorkout)
+                    SelectedWorkoutDetailView(
+                        workout: selectedWorkout, isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                    )
                 } else if let selectedDate = selectedDate {
                     VStack(spacing: 8) {
                         Text(DateHelper.formattedDate(selectedDate))
@@ -299,6 +302,7 @@ struct CalendarHistoryDateCell: View {
 // MARK: - 選択されたワークアウト詳細
 struct SelectedWorkoutDetailView: View {
     let workout: DailyWorkout
+    let isCalendarFeatureEnabled: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -308,7 +312,8 @@ struct SelectedWorkoutDetailView: View {
 
                 Spacer()
 
-                if workout.isSyncedToCalendar {
+                // カレンダー機能が有効な場合のみ連携状態を表示
+                if isCalendarFeatureEnabled && workout.isSyncedToCalendar {
                     HStack(spacing: 4) {
                         Image(systemName: "calendar.badge.checkmark")
                         Text("連携済み")
