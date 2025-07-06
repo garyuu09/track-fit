@@ -15,7 +15,7 @@ struct TrackFitApp: App {
     var body: some Scene {
         WindowGroup {
             LaunchScreen()
-                .tint(Color(red: 242 / 255, green: 137 / 255, blue: 58 / 255))
+                .tint(Color.trackFitThemeColor)
                 .preferredColorScheme(
                     displayMode == .system ? nil : (displayMode == .dark ? .dark : .light)
                 )

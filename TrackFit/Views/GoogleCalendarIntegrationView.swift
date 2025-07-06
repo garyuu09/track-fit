@@ -24,7 +24,7 @@ struct GoogleCalendarIntegrationView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 72, height: 72)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.trackFitThemeColor)
                         .padding(.top, 40)
 
                     Text("Googleカレンダーと連携")
@@ -41,7 +41,7 @@ struct GoogleCalendarIntegrationView: View {
                         Group {
                             HStack(alignment: .top) {
                                 Image(systemName: "1.circle.fill")
-                                    .foregroundStyle(Color.accentColor)
+                                    .foregroundStyle(Color.trackFitThemeColor)
                                 VStack(alignment: .leading) {
                                     Text("カレンダーと接続")
                                         .font(.headline)
@@ -58,7 +58,7 @@ struct GoogleCalendarIntegrationView: View {
                         Group {
                             HStack(alignment: .top) {
                                 Image(systemName: "2.circle.fill")
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(.trackFitThemeColor)
                                 VStack(alignment: .leading) {
                                     Text("日々の記録を可視化")
                                         .font(.headline)
