@@ -342,9 +342,11 @@ struct SelectedWorkoutDetailView: View {
                             Text(record.exerciseName)
                                 .font(.caption)
                             Spacer()
-                            Text("\(Int(record.weight))kg × \(record.reps)回 × \(record.sets)セット")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(
+                                "\(record.weight, specifier: "%.1f")kg × \(record.reps)回 × \(record.sets)セット"
+                            )
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         }
                     }
                 }
