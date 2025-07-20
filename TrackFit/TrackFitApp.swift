@@ -12,6 +12,11 @@ import SwiftUI
 struct TrackFitApp: App {
     @AppStorage("displayMode") var displayMode: DisplayMode = .system
 
+    init() {
+        // AdMobの初期化
+        AdMobService.shared.initializeAdMob()
+    }
+
     var body: some Scene {
         WindowGroup {
             LaunchScreen()

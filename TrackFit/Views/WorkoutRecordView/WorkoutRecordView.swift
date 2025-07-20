@@ -113,6 +113,10 @@ struct WorkoutRecordView: View {
                         )
                     }
                 }
+                // AdMobバナー広告
+                AdMobBannerView()
+                    .frame(height: 50)
+                    .background(Color(.systemBackground))
 
                 List {
                     Section(
