@@ -517,7 +517,7 @@ struct WorkoutRow: View {
                 ForEach(daily.records) { record in
                     GridRow {
                         Text(record.exerciseName)
-                        Text("\(Int(record.weight))kg")
+                        Text("\(record.weight, specifier: "%.1f")kg")
                         Text("x")
                         Text("\(record.reps)回")
                         Text("x")
