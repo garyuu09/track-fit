@@ -42,9 +42,8 @@ class AdMobService: NSObject, ObservableObject {
             let prodID = Bundle.main.object(forInfoDictionaryKey: "ADMOB_BANNER_UNIT_ID_PROD")
                 as? String
         else {
-            print("Warning: Production AdUnit ID not found in Info.plist, using fallback")
-            // フォールバック用
-            return "ca-app-pub-3386119641089297/7299235005"
+            print("Error: Production AdUnit ID not found in Info.plist")
+            fatalError("Production AdUnit ID must be configured in Secrets.xcconfig")
         }
         return prodID
     }
