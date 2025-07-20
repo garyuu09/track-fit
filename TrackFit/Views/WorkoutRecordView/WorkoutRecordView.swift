@@ -6,7 +6,7 @@ import SwiftUI
 struct WorkoutRecordView: View {
     @State private var syncingWorkoutIDs: Set<UUID> = []
     enum FilterType: String, CaseIterable, Identifiable {
-        case all, thisWeek, thisMonth, custom
+        case thisWeek, lastWeek, thisMonth, all, custom
         var id: String { self.rawValue }
     }
 
@@ -37,7 +37,7 @@ struct WorkoutRecordView: View {
     @Environment(\.scenePhase) private var scenePhase
     // 選択した日付
     @State private var selectedDate = Date()
-    @State private var selectedFilter: FilterType = .all
+    @State private var selectedFilter: FilterType = .thisWeek
     @State private var customStartDate: Date = {
         let now = Date()
         return Calendar.current.date(byAdding: .month, value: -1, to: now) ?? now
@@ -59,6 +59,18 @@ struct WorkoutRecordView: View {
                 break
             }
             filtered = dailyWorkouts.filter { $0.startDate >= startOfWeek && $0.startDate <= now }
+        case .lastWeek:
+            guard let thisWeekInterval = calendar.dateInterval(of: .weekOfYear, for: now),
+                let lastWeekStart = calendar.date(
+                    byAdding: .weekOfYear, value: -1, to: thisWeekInterval.start)
+            else {
+                filtered = dailyWorkouts
+                break
+            }
+            let lastWeekEnd = thisWeekInterval.start
+            filtered = dailyWorkouts.filter {
+                $0.startDate >= lastWeekStart && $0.startDate < lastWeekEnd
+            }
         case .thisMonth:
             guard let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start else {
                 filtered = dailyWorkouts
@@ -77,12 +89,14 @@ struct WorkoutRecordView: View {
 
     private var dateRangeLabel: String {
         switch selectedFilter {
-        case .all:
-            return "すべての記録"
         case .thisWeek:
             return "今週の記録"
+        case .lastWeek:
+            return "先週の記録"
         case .thisMonth:
             return "今月の記録"
+        case .all:
+            return "すべての記録"
         case .custom:
             return
                 "\(DateHelper.formattedDate(customStartDate)) 〜 \(DateHelper.formattedDate(customEndDate)) の記録"
@@ -93,9 +107,10 @@ struct WorkoutRecordView: View {
         ZStack {
             NavigationStack {
                 Picker("期間フィルター", selection: $selectedFilter) {
-                    Text("全て").tag(FilterType.all)
                     Text("今週").tag(FilterType.thisWeek)
+                    Text("先週").tag(FilterType.lastWeek)
                     Text("今月").tag(FilterType.thisMonth)
+                    Text("全て").tag(FilterType.all)
                     Text("カスタム").tag(FilterType.custom)
                 }
                 .pickerStyle(.segmented)
@@ -242,6 +257,12 @@ struct WorkoutRecordView: View {
                                     "今週のトレーニング記録がありません",
                                     systemImage: "calendar.badge.plus",
                                     description: Text("今週もがんばりましょう！新しい目標にチャレンジしてみませんか？")
+                                )
+                            case .lastWeek:
+                                ContentUnavailableView(
+                                    "先週のトレーニング記録がありません",
+                                    systemImage: "calendar.badge.minus",
+                                    description: Text("先週は忙しかったですね。今週から新たにスタートしましょう！")
                                 )
                             case .thisMonth:
                                 ContentUnavailableView(
