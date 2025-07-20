@@ -219,7 +219,7 @@ struct WorkoutSheetView: View {
                     Button(action: {
                         let newRecord = WorkoutRecord(
                             exerciseName: "",
-                            weight: 10,
+                            weight: 10.0,
                             reps: 10,
                             sets: 3
                         )
@@ -248,11 +248,11 @@ struct CardView: View {
 
     private var iconName: String {
         switch record.exerciseName {
-        case "ベンチプレス": return "figure.strengthtraining.traditional"
-        case "スクワット": return "figure.strengthtraining.functional"
-        case "デッドリフト": return "figure.barbell"
-        case "チェストプレス": return "figure.strengthtraining.traditional"
-        case "ラットプルダウン": return "figure.pullup"
+        //        case "ベンチプレス": return "figure.strengthtraining.traditional"
+        //        case "スクワット": return "figure.strengthtraining.functional"
+        //        case "デッドリフト": return "figure.barbell"
+        //        case "チェストプレス": return "figure.strengthtraining.traditional"
+        //        case "ラットプルダウン": return "figure.pullup"
         default: return "dumbbell"
         }
     }
@@ -278,7 +278,7 @@ struct CardView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "scalemass")
                             .font(.caption)
-                        Text("\(Int(record.weight))kg")
+                        Text("\(record.weight, specifier: "%.1f")kg")
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
@@ -346,9 +346,9 @@ struct EditWorkoutSheetView: View {
     @State private var editingReps: Int
     @State private var editingSets: Int
 
-    // 重量の選択肢（2.5kg刻み、2.5kg～200kg）
+    // 重量の選択肢（0.1kg刻み、0.1kg～200kg）
     private var weightOptions: [Double] {
-        return Array(stride(from: 2.5, through: 200.0, by: 2.5))
+        return Array(stride(from: 0.1, through: 200.0, by: 0.1))
     }
 
     init(
@@ -502,7 +502,7 @@ struct EditWorkoutSheetView: View {
                 )
             }
             .sheet(isPresented: $isShowingWeightPicker) {
-                WeightPickerSheet(weight: $editingWeight, weightOptions: weightOptions)
+                WeightPickerSheet(weight: $editingWeight, weightOptions: [])
             }
             .alert("種目を削除", isPresented: $isShowingDeleteConfirmation) {
                 Button("削除", role: .destructive) {
@@ -539,17 +539,68 @@ struct WeightPickerSheet: View {
     let weightOptions: [Double]
     @Environment(\.dismiss) private var dismiss
 
+    // 整数部分と小数部分を分けて管理
+    @State private var integerPart: Int
+    @State private var decimalPart: Int
+
+    // 整数部分の選択肢（0kg～200kg）
+    private let integerOptions = Array(0...200)
+    // 小数部分の選択肢（0.0, 0.1, 0.2, ..., 0.9）
+    private let decimalOptions = Array(0...9)
+
+    init(weight: Binding<Double>, weightOptions: [Double]) {
+        self._weight = weight
+        self.weightOptions = weightOptions
+
+        // 現在の重量から整数部分と小数部分を分離
+        let currentWeight = weight.wrappedValue
+        self._integerPart = State(initialValue: Int(currentWeight))
+        self._decimalPart = State(
+            initialValue: Int((currentWeight - Double(Int(currentWeight))) * 10 + 0.5))
+    }
+
     var body: some View {
         NavigationView {
-            VStack {
-                Picker("重量を選択", selection: $weight) {
-                    ForEach(weightOptions, id: \.self) { weightOption in
-                        Text("\(weightOption, specifier: "%.1f") kg")
-                            .tag(weightOption)
+            VStack(spacing: 20) {
+                HStack(spacing: 0) {
+                    // 整数部分のPicker
+                    Picker("整数部分", selection: $integerPart) {
+                        ForEach(integerOptions, id: \.self) { value in
+                            Text("\(value)")
+                                .tag(value)
+                        }
                     }
+                    .pickerStyle(.wheel)
+                    .frame(width: 80)
+
+                    Text(".")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+
+                    // 小数部分のPicker
+                    Picker("小数部分", selection: $decimalPart) {
+                        ForEach(decimalOptions, id: \.self) { value in
+                            Text("\(value)")
+                                .tag(value)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(width: 60)
+
+                    Text("kg")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .padding(.leading, 8)
                 }
-                .pickerStyle(.wheel)
-                .frame(maxHeight: 300)
+                .frame(height: 200)
+
+                // 現在選択されている重量を表示
+                Text(
+                    "選択中: \(Double(integerPart) + Double(decimalPart) / 10.0, specifier: "%.1f")kg"
+                )
+                .font(.subheadline)
+                .foregroundColor(.secondary)
 
                 Spacer()
             }
@@ -558,12 +609,14 @@ struct WeightPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("完了") {
+                        // 整数部分と小数部分を合成して重量を更新
+                        weight = Double(integerPart) + Double(decimalPart) / 10.0
                         dismiss()
                     }
                 }
             }
         }
-        .presentationDetents([.fraction(0.4)])
+        .presentationDetents([.fraction(0.5)])
     }
 }
 
