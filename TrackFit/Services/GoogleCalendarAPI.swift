@@ -50,7 +50,8 @@ struct GoogleCalendarAPI {
     /// - Returns: 作成されたイベントの eventId
     static func createWorkoutEvent(
         accessToken: String,
-        workout: DailyWorkout
+        workout: DailyWorkout,
+        colorId: String = "4"  // デフォルトは「みかん」
     ) async throws -> String {
 
         // 1) イベント開始・終了時刻をISO8601文字列に変換
@@ -83,6 +84,7 @@ struct GoogleCalendarAPI {
                 "dateTime": endString,
                 "timeZone": "UTC",
             ],
+            "colorId": colorId,
         ]
 
         // 3) JSONエンコード
@@ -133,7 +135,8 @@ struct GoogleCalendarAPI {
     static func updateWorkoutEvent(
         accessToken: String,
         eventId: String,
-        workout: DailyWorkout
+        workout: DailyWorkout,
+        colorId: String = "4"  // デフォルトは「みかん」
     ) async throws {
         // 1) イベント開始・終了時刻をISO8601文字列に変換
         let startString = DateHelper.iso8601String(from: workout.startDate)
@@ -161,6 +164,7 @@ struct GoogleCalendarAPI {
                 "dateTime": endString,
                 "timeZone": "UTC",
             ],
+            "colorId": colorId,
         ]
 
         let requestData = try JSONSerialization.data(

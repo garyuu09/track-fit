@@ -11,9 +11,58 @@ enum DisplayMode: String {
     case light, dark, system
 }
 
+enum CalendarEventColor: String, CaseIterable, Identifiable {
+    case みかん = "4"
+    case トマト = "11"
+    case フラミンゴ = "5"
+    case バナナ = "9"
+    case セージ = "2"
+    case ピーコック = "6"
+    case ブルーベリー = "1"
+    case ラベンダー = "3"
+    case グレープ = "10"
+    case グラファイト = "8"
+    case デフォルト = "7"
+
+    var id: String { self.rawValue }
+
+    var displayName: String {
+        switch self {
+        case .みかん: return "みかん"
+        case .トマト: return "トマト"
+        case .フラミンゴ: return "フラミンゴ"
+        case .バナナ: return "バナナ"
+        case .セージ: return "セージ"
+        case .ピーコック: return "ピーコック"
+        case .ブルーベリー: return "ブルーベリー"
+        case .ラベンダー: return "ラベンダー"
+        case .グレープ: return "グレープ"
+        case .グラファイト: return "グラファイト"
+        case .デフォルト: return "デフォルト"
+        }
+    }
+
+    var swiftUIColor: Color {
+        switch self {
+        case .みかん: return .orange
+        case .トマト: return .red
+        case .フラミンゴ: return .pink
+        case .バナナ: return .yellow
+        case .セージ: return .green
+        case .ピーコック: return .teal
+        case .ブルーベリー: return .blue
+        case .ラベンダー: return .purple
+        case .グレープ: return .purple
+        case .グラファイト: return .gray
+        case .デフォルト: return .primary
+        }
+    }
+}
+
 struct SettingView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = .system
     @AppStorage("isCalendarFeatureEnabled") private var isCalendarFeatureEnabled: Bool = true
+    @AppStorage("calendarEventColor") private var calendarEventColor: CalendarEventColor = .みかん
     @State private var isGoogleCalendarLinked: Bool = false
     @State private var linkedAccountEmail: String? = nil
     @State private var accessToken: String? = nil
@@ -92,6 +141,26 @@ struct SettingView: View {
                                     isShowCalendarIntegration = true
                                 }
                                 .buttonStyle(.borderedProminent)
+                            }
+                        }
+
+                        // カレンダー機能が有効で連携中の場合のみイベント色設定を表示
+                        if isGoogleCalendarLinked {
+                            HStack {
+                                Text("イベントの色")
+                                Spacer()
+                                Picker("", selection: $calendarEventColor) {
+                                    ForEach(CalendarEventColor.allCases) { color in
+                                        HStack {
+                                            Circle()
+                                                .fill(color.swiftUIColor)
+                                                .frame(width: 16, height: 16)
+                                            Text(color.displayName)
+                                        }
+                                        .tag(color)
+                                    }
+                                }
+                                .pickerStyle(.menu)
                             }
                         }
                     }
