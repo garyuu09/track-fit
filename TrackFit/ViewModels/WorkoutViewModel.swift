@@ -26,6 +26,9 @@ class WorkoutViewModel: ObservableObject {
     /// Google Sign-In などで取得したアクセストークンを外部からセット
     var accessToken: String = ""
 
+    /// カレンダーイベントの色設定を@AppStorageから取得
+    @AppStorage("calendarEventColor") private var calendarEventColor: CalendarEventColor = .みかん
+
     /// 新規イベント作成
     func createEvent(dailyWorkout: DailyWorkout) async -> Bool {
         do {
@@ -34,7 +37,9 @@ class WorkoutViewModel: ObservableObject {
 
             let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken") ?? ""
             let newId = try await GoogleCalendarAPI.createWorkoutEvent(
-                accessToken: accessToken, workout: dailyWorkout)
+                accessToken: accessToken,
+                workout: dailyWorkout,
+                colorId: calendarEventColor.rawValue)
 
             self.eventId = newId
 
@@ -60,7 +65,10 @@ class WorkoutViewModel: ObservableObject {
             errorMessage = nil
 
             try await GoogleCalendarAPI.updateWorkoutEvent(
-                accessToken: accessToken, eventId: eid, workout: dailyWorkout)
+                accessToken: accessToken,
+                eventId: eid,
+                workout: dailyWorkout,
+                colorId: calendarEventColor.rawValue)
 
             isLoading = false
             return true
