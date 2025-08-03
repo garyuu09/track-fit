@@ -35,7 +35,9 @@ class WorkoutViewModel: ObservableObject {
             isLoading = true
             errorMessage = nil
 
-            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken") ?? ""
+            let accessToken =
+                KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+                ?? ""
             let newId = try await GoogleCalendarAPI.createWorkoutEvent(
                 accessToken: accessToken,
                 workout: dailyWorkout,
@@ -60,7 +62,9 @@ class WorkoutViewModel: ObservableObject {
         }
 
         do {
-            let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken") ?? ""
+            let accessToken =
+                KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+                ?? ""
             isLoading = true
             errorMessage = nil
 

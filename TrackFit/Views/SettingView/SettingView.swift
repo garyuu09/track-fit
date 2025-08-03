@@ -242,10 +242,10 @@ struct SettingView: View {
                     onFinish: { didLink in
                         if didLink {
                             UserDefaults.standard.set(true, forKey: "isCalendarLinked")
-                            accessToken = UserDefaults.standard.string(
-                                forKey: "GoogleAccessToken")
-                            linkedAccountEmail = UserDefaults.standard.string(
-                                forKey: "GoogleEmail")
+                            accessToken = KeychainHelper.shared.loadString(
+                                forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+                            linkedAccountEmail = KeychainHelper.shared.loadString(
+                                forKey: KeychainHelper.GoogleTokenKeys.email)
                             isGoogleCalendarLinked = true
                         }
                         isShowCalendarIntegration = false
@@ -263,12 +263,12 @@ struct SettingView: View {
         }
     }
 
-    // 連携状態を読み込み（例：UserDefaultsまたはキーチェーンから）
+    // 連携状態を読み込み（Keychainから安全に取得）
     func loadLinkedStatus() {
-        // ※ここではUserDefaultsを使った例です。実際はセキュアなキーチェーンへの保存を検討してください。
         let isLinked = UserDefaults.standard.bool(forKey: "isCalendarLinked")
-        let savedToken = UserDefaults.standard.string(forKey: "GoogleAccessToken")
-        let savedEmail = UserDefaults.standard.string(forKey: "GoogleEmail")
+        let keychain = KeychainHelper.shared
+        let savedToken = keychain.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+        let savedEmail = keychain.loadString(forKey: KeychainHelper.GoogleTokenKeys.email)
 
         if isLinked && savedToken != nil && savedEmail != nil {
             self.accessToken = savedToken
