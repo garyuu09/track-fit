@@ -10,7 +10,9 @@ class AdMobService: NSObject, ObservableObject {
 
     func initializeAdMob() {
         MobileAds.shared.start { initializationStatus in
-            print("AdMob initialization completed with status: \(initializationStatus)")
+            #if DEBUG
+                print("AdMob initialization completed with status: \(initializationStatus)")
+            #endif
         }
     }
 
@@ -19,7 +21,9 @@ class AdMobService: NSObject, ObservableObject {
             let appID = Bundle.main.object(forInfoDictionaryKey: "GADApplicationIdentifier")
                 as? String
         else {
-            print("Error: AdMob App ID not found in Info.plist")
+            #if DEBUG
+                print("Error: AdMob App ID not found in Info.plist")
+            #endif
             fatalError("AdMob App ID not found in Info.plist")
         }
         return appID
@@ -30,7 +34,9 @@ class AdMobService: NSObject, ObservableObject {
             let testID = Bundle.main.object(forInfoDictionaryKey: "ADMOB_BANNER_UNIT_ID_TEST")
                 as? String
         else {
-            print("Warning: Test AdUnit ID not found in Info.plist, using fallback")
+            #if DEBUG
+                print("Warning: Test AdUnit ID not found in Info.plist, using fallback")
+            #endif
             // フォールバック用のテスト専用広告ユニットID
             return "ca-app-pub-3940256099942544/2435281174"
         }
@@ -42,7 +48,9 @@ class AdMobService: NSObject, ObservableObject {
             let prodID = Bundle.main.object(forInfoDictionaryKey: "ADMOB_BANNER_UNIT_ID_PROD")
                 as? String
         else {
-            print("Error: Production AdUnit ID not found in Info.plist")
+            #if DEBUG
+                print("Error: Production AdUnit ID not found in Info.plist")
+            #endif
             fatalError("Production AdUnit ID must be configured in Secrets.xcconfig")
         }
         return prodID

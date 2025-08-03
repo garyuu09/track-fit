@@ -15,6 +15,12 @@ struct GoogleCalendarAPI {
     }
 
     static func fetchEvents(accessToken: String) async throws -> [CalendarEvent] {
+        return try await makeAPICallWithAutoRefresh { token in
+            return try await _fetchEvents(accessToken: token)
+        }
+    }
+
+    private static func _fetchEvents(accessToken: String) async throws -> [CalendarEvent] {
         // プライマリカレンダーのイベントを取得する
         guard
             let url = URL(
@@ -36,10 +42,14 @@ struct GoogleCalendarAPI {
         if let httpResponse = response as? HTTPURLResponse,
             !(200..<300).contains(httpResponse.statusCode)
         {
-            print("Status Code:", httpResponse.statusCode)
+            #if DEBUG
+                print("Status Code:", httpResponse.statusCode)
+            #endif
             throw URLError(.badServerResponse)
         }
-        print("Response body:", String(data: data, encoding: .utf8) ?? "N/A")
+        #if DEBUG
+            print("Response body:", String(data: data, encoding: .utf8) ?? "N/A")
+        #endif
 
         // JSONデコード
         let decoded = try JSONDecoder().decode(EventsResponse.self, from: data)
@@ -52,6 +62,17 @@ struct GoogleCalendarAPI {
         accessToken: String,
         workout: DailyWorkout,
         colorId: String = "4"  // デフォルトは「みかん」
+    ) async throws -> String {
+        return try await makeAPICallWithAutoRefresh { token in
+            return try await _createWorkoutEvent(
+                accessToken: token, workout: workout, colorId: colorId)
+        }
+    }
+
+    private static func _createWorkoutEvent(
+        accessToken: String,
+        workout: DailyWorkout,
+        colorId: String = "4"
     ) async throws -> String {
 
         // 1) イベント開始・終了時刻をISO8601文字列に変換
@@ -138,6 +159,18 @@ struct GoogleCalendarAPI {
         workout: DailyWorkout,
         colorId: String = "4"  // デフォルトは「みかん」
     ) async throws {
+        return try await makeAPICallWithAutoRefresh { token in
+            return try await _updateWorkoutEvent(
+                accessToken: token, eventId: eventId, workout: workout, colorId: colorId)
+        }
+    }
+
+    private static func _updateWorkoutEvent(
+        accessToken: String,
+        eventId: String,
+        workout: DailyWorkout,
+        colorId: String = "4"
+    ) async throws {
         // 1) イベント開始・終了時刻をISO8601文字列に変換
         let startString = DateHelper.iso8601String(from: workout.startDate)
         let endString = DateHelper.iso8601String(from: workout.endDate)
@@ -206,7 +239,9 @@ struct GoogleCalendarAPI {
             guard
                 let clientID = Bundle.main.object(forInfoDictionaryKey: "CLIENT_ID") as? String
             else {
-                print("CLIENT_ID が見つかりません")
+                #if DEBUG
+                    print("CLIENT_ID が見つかりません")
+                #endif
                 return false
             }
 
@@ -239,26 +274,62 @@ struct GoogleCalendarAPI {
 
             let user = signInResult.user
             let idToken = user.idToken?.tokenString
-            let token = user.accessToken.tokenString
+            let accessToken = user.accessToken.tokenString
+            let refreshToken = user.refreshToken.tokenString
             let email = user.profile?.email ?? "user@gmail.com"
+            let expiryDate = user.accessToken.expirationDate
 
-            UserDefaults.standard.set(token, forKey: "GoogleAccessToken")
-            UserDefaults.standard.set(email, forKey: "GoogleEmail")
+            // Keychainに安全に保存
+            let keychain = KeychainHelper.shared
+            _ = keychain.save(accessToken, forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+            _ = keychain.save(email, forKey: KeychainHelper.GoogleTokenKeys.email)
 
-            print("ログイン成功!")
-            print("idToken: \(idToken ?? "")")
-            print("accessToken: \(token)")
+            _ = keychain.save(refreshToken, forKey: KeychainHelper.GoogleTokenKeys.refreshToken)
+
+            if let expiryDate = expiryDate {
+                let expiryTimestamp = String(expiryDate.timeIntervalSince1970)
+                _ = keychain.save(
+                    expiryTimestamp, forKey: KeychainHelper.GoogleTokenKeys.tokenExpiryDate)
+            }
+
+            #if DEBUG
+                print("ログイン成功!")
+                print("idToken: \(idToken != nil ? "取得済み" : "なし")")
+                print("accessToken: 取得済み")
+                print("refreshToken: 保存済み")
+            #endif
             UserDefaults.standard.set(true, forKey: "isCalendarLinked")
             return true
 
         } catch {
-            print("ログインエラー: \(error.localizedDescription)")
+            #if DEBUG
+                print("ログインエラー: \(error.localizedDescription)")
+            #endif
             return false
         }
     }
 
-    // アクセストークンの有効性チェック
-    static func validateAccessToken(accessToken: String) async -> Bool {
+    // アクセストークンの有効性チェック（期限チェック含む）
+    static func validateAccessToken(accessToken: String? = nil) async -> Bool {
+        let token =
+            accessToken
+            ?? KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+
+        guard let token = token else {
+            #if DEBUG
+                print("アクセストークンが見つかりません")
+            #endif
+            return false
+        }
+
+        // 期限チェック
+        if isTokenExpired() {
+            #if DEBUG
+                print("アクセストークンの期限が切れています")
+            #endif
+            return false
+        }
+
         guard
             let url = URL(
                 string: "https://www.googleapis.com/calendar/v3/calendars/primary"
@@ -269,7 +340,7 @@ struct GoogleCalendarAPI {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
@@ -277,14 +348,34 @@ struct GoogleCalendarAPI {
                 return (200..<300).contains(httpResponse.statusCode)
             }
         } catch {
-            print("トークン検証エラー: \(error.localizedDescription)")
+            #if DEBUG
+                print("トークン検証エラー: \(error.localizedDescription)")
+            #endif
         }
         return false
     }
 
+    // トークンの期限切れチェック
+    private static func isTokenExpired() -> Bool {
+        guard
+            let expiryTimestampString = KeychainHelper.shared.loadString(
+                forKey: KeychainHelper.GoogleTokenKeys.tokenExpiryDate),
+            let expiryTimestamp = Double(expiryTimestampString)
+        else {
+            // 期限情報がない場合は期限切れとして扱う
+            return true
+        }
+
+        let expiryDate = Date(timeIntervalSince1970: expiryTimestamp)
+        let bufferTime: TimeInterval = 5 * 60  // 5分のバッファ
+        return Date().addingTimeInterval(bufferTime) >= expiryDate
+    }
+
     // 連携状態の自動チェックと更新
     static func checkAndUpdateLinkingStatus() async {
-        guard let accessToken = UserDefaults.standard.string(forKey: "GoogleAccessToken"),
+        guard
+            let accessToken = KeychainHelper.shared.loadString(
+                forKey: KeychainHelper.GoogleTokenKeys.accessToken),
             !accessToken.isEmpty
         else {
             // トークンが存在しない場合は連携解除状態に設定
@@ -298,15 +389,81 @@ struct GoogleCalendarAPI {
         let isValid = await validateAccessToken(accessToken: accessToken)
         await MainActor.run {
             if !isValid {
-                // トークンが無効な場合は連携解除処理を実行
-                unlinkGoogleCalendar()
-                UserDefaults.standard.set(false, forKey: "isCalendarLinked")
-                UserDefaults.standard.set(true, forKey: "showIntegrationBanner")
-                print("アクセストークンが無効のため連携を解除しました")
+                // トークンが無効な場合はリフレッシュを試行
+                Task {
+                    do {
+                        _ = try await refreshAccessToken()
+                        UserDefaults.standard.set(true, forKey: "isCalendarLinked")
+                        #if DEBUG
+                            print("アクセストークンを更新しました")
+                        #endif
+                    } catch {
+                        // リフレッシュに失敗した場合は連携解除
+                        unlinkGoogleCalendar()
+                        UserDefaults.standard.set(false, forKey: "isCalendarLinked")
+                        UserDefaults.standard.set(true, forKey: "showIntegrationBanner")
+                        #if DEBUG
+                            print("トークン更新に失敗したため連携を解除しました: \(error.localizedDescription)")
+                        #endif
+                    }
+                }
             } else {
                 // トークンが有効な場合は連携状態を確認
                 UserDefaults.standard.set(true, forKey: "isCalendarLinked")
             }
+        }
+    }
+
+    // リフレッシュトークンを使用してアクセストークンを更新
+    static func refreshAccessToken() async throws -> String {
+        do {
+            // GoogleSignInのrestorePreviousSignInを使用してトークンを更新
+            let result = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
+            let newAccessToken = result.accessToken.tokenString
+            let newExpiryDate = result.accessToken.expirationDate
+
+            // 新しいトークンをKeychainに保存
+            let keychain = KeychainHelper.shared
+            _ = keychain.save(newAccessToken, forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+
+            if let expiryDate = newExpiryDate {
+                let expiryTimestamp = String(expiryDate.timeIntervalSince1970)
+                _ = keychain.save(
+                    expiryTimestamp, forKey: KeychainHelper.GoogleTokenKeys.tokenExpiryDate)
+            }
+
+            #if DEBUG
+                print("アクセストークンを更新しました")
+            #endif
+            return newAccessToken
+        } catch {
+            #if DEBUG
+                print("トークン更新エラー: \(error.localizedDescription)")
+            #endif
+            throw error
+        }
+    }
+
+    // 自動リトライ機能付きのAPI呼び出しヘルパー
+    static func makeAPICallWithAutoRefresh<T>(_ apiCall: @escaping (String) async throws -> T)
+        async throws -> T
+    {
+        let accessToken =
+            KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+            ?? ""
+
+        do {
+            return try await apiCall(accessToken)
+        } catch {
+            // HTTP 401エラーまたはトークン期限切れの場合はリトライ
+            if let nsError = error as NSError?, nsError.code == 401 || isTokenExpired() {
+                #if DEBUG
+                    print("認証エラーを検出、トークンを更新してリトライします")
+                #endif
+                let newToken = try await refreshAccessToken()
+                return try await apiCall(newToken)
+            }
+            throw error
         }
     }
 
@@ -315,8 +472,15 @@ struct GoogleCalendarAPI {
         // Googleサインアウト処理
         GIDSignIn.sharedInstance.signOut()
 
-        // 保存しているトークンやメールアドレスを削除
-        UserDefaults.standard.removeObject(forKey: "GoogleAccessToken")
-        UserDefaults.standard.removeObject(forKey: "GoogleEmail")
+        // Keychainから全ての認証情報を削除
+        let keychain = KeychainHelper.shared
+        _ = keychain.delete(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+        _ = keychain.delete(forKey: KeychainHelper.GoogleTokenKeys.refreshToken)
+        _ = keychain.delete(forKey: KeychainHelper.GoogleTokenKeys.email)
+        _ = keychain.delete(forKey: KeychainHelper.GoogleTokenKeys.tokenExpiryDate)
+
+        #if DEBUG
+            print("Google認証情報をすべて削除しました")
+        #endif
     }
 }

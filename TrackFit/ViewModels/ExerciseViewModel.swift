@@ -29,7 +29,9 @@ class ExerciseViewModel: ObservableObject {
             )
             exercises = try modelContext.fetch(descriptor)
         } catch {
-            print("Error fetching exercises: \(error)")
+            #if DEBUG
+                print("Error fetching exercises: \(error)")
+            #endif
         }
     }
 
@@ -65,7 +67,9 @@ class ExerciseViewModel: ObservableObject {
         do {
             try modelContext.save()
         } catch {
-            print("Error saving context: \(error)")
+            #if DEBUG
+                print("Error saving context: \(error)")
+            #endif
         }
     }
 

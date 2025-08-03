@@ -93,7 +93,9 @@ struct GoogleCalendarIntegrationView: View {
                                     if success {
                                         onFinish(true)
                                         showIntegrationBanner = false
-                                        print("showIntegrationBanner: \(showIntegrationBanner)")
+                                        #if DEBUG
+                                            print("showIntegrationBanner: \(showIntegrationBanner)")
+                                        #endif
                                     }
                                 }
                             }

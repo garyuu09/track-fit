@@ -134,7 +134,9 @@ struct WorkoutSheetView: View {
                                 do {
                                     try context.save()
                                 } catch {
-                                    print("データ保存エラー: \(error.localizedDescription)")
+                                    #if DEBUG
+                                        print("データ保存エラー: \(error.localizedDescription)")
+                                    #endif
                                     daily.isSyncedToCalendar = false
                                 }
                             } else {
@@ -143,12 +145,16 @@ struct WorkoutSheetView: View {
                                 do {
                                     try context.save()
                                 } catch {
-                                    print("データ保存エラー: \(error.localizedDescription)")
+                                    #if DEBUG
+                                        print("データ保存エラー: \(error.localizedDescription)")
+                                    #endif
                                 }
 
                                 // エラー詳細をコンソールに出力
                                 if let errorMsg = viewModel.errorMessage {
-                                    print("Google Calendar同期エラー: \(errorMsg)")
+                                    #if DEBUG
+                                        print("Google Calendar同期エラー: \(errorMsg)")
+                                    #endif
                                 }
                             }
                             NotificationCenter.default.post(
@@ -160,7 +166,9 @@ struct WorkoutSheetView: View {
                         do {
                             try context.save()
                         } catch {
-                            print("データ保存エラー: \(error.localizedDescription)")
+                            #if DEBUG
+                                print("データ保存エラー: \(error.localizedDescription)")
+                            #endif
                         }
                         dismiss()
 
