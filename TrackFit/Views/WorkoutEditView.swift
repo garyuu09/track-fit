@@ -18,8 +18,8 @@ struct WorkoutEditView: View {
 
     // 実際には、親Viewやログイン後の画面から accessToken を注入する想定
     let accessToken: String
-    let isUpdateMode: Bool // true: 更新モード, false: 新規作成モード
-    let existingEventId: String? // 更新モードの場合のみ設定
+    let isUpdateMode: Bool  // true: 更新モード, false: 新規作成モード
+    let existingEventId: String?  // 更新モードの場合のみ設定
 
     var body: some View {
         VStack(spacing: 20) {
@@ -61,9 +61,9 @@ struct WorkoutEditView: View {
                 Button(isUpdateMode ? "イベント更新" : "新規追加") {
                     Task {
                         if isUpdateMode {
-                            await viewModel.updateEvent()
+                            //                            await viewModel.updateEvent()
                         } else {
-//                            await viewModel.createEvent()
+                            //                            await viewModel.createEvent()
                         }
                     }
                 }
@@ -77,8 +77,10 @@ struct WorkoutEditView: View {
                     .padding()
             }
         }
-        .frame(width: UIScreen.main.bounds.width,
-               height: UIScreen.main.bounds.height)
+        .frame(
+            width: UIScreen.main.bounds.width,
+            height: UIScreen.main.bounds.height
+        )
         .contentShape(RoundedRectangle(cornerRadius: 10))
         .onTapGesture {
             focusedField = nil

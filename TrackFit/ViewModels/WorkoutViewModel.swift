@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// TODO: キーチェーンに保存する
-var tempAccessToken: String = ""
-
 @MainActor
 class WorkoutViewModel: ObservableObject {
     /// 画面で入力するプロパティ
@@ -29,40 +26,60 @@ class WorkoutViewModel: ObservableObject {
     /// Google Sign-In などで取得したアクセストークンを外部からセット
     var accessToken: String = ""
 
+    /// カレンダーイベントの色設定を@AppStorageから取得
+    @AppStorage("calendarEventColor") private var calendarEventColor: CalendarEventColor = .みかん
+
     /// 新規イベント作成
-    func createEvent(dailyWorkout: DailyWorkout) async {
+    func createEvent(dailyWorkout: DailyWorkout) async -> Bool {
         do {
             isLoading = true
             errorMessage = nil
 
-            let newId = try await GoogleCalendarAPI.createWorkoutEvent(accessToken: tempAccessToken, workout: dailyWorkout)
+            let accessToken =
+                KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+                ?? ""
+            let newId = try await GoogleCalendarAPI.createWorkoutEvent(
+                accessToken: accessToken,
+                workout: dailyWorkout,
+                colorId: calendarEventColor.rawValue)
 
             self.eventId = newId
 
         } catch {
             self.errorMessage = error.localizedDescription
+            return false
         }
         /// 新規イベント作成処理が終了したため、ローディング状態を解除する。
         isLoading = false
+        return true
     }
 
     /// 既存イベントを更新
-    func updateEvent() async {
-        guard let eid = eventId else {
+    func updateEvent(dailyWorkout: DailyWorkout) async -> Bool {
+        guard let eid = dailyWorkout.eventId else {
             self.errorMessage = "イベントIDが取得できません。"
-            return
+            return false
         }
 
         do {
+            let accessToken =
+                KeychainHelper.shared.loadString(forKey: KeychainHelper.GoogleTokenKeys.accessToken)
+                ?? ""
             isLoading = true
             errorMessage = nil
 
-            let workoutData = WorkoutEventData(exerciseName: exerciseName, weight: weight, sets: sets, reps: reps, date: date)
+            try await GoogleCalendarAPI.updateWorkoutEvent(
+                accessToken: accessToken,
+                eventId: eid,
+                workout: dailyWorkout,
+                colorId: calendarEventColor.rawValue)
 
-            try await GoogleCalendarAPI.updateWorkoutEvent(accessToken: accessToken, eventId: eid, workout: workoutData)
+            isLoading = false
+            return true
         } catch {
             self.errorMessage = error.localizedDescription
+            isLoading = false
+            return false
         }
     }
-
 }

@@ -30,16 +30,16 @@ extension CalendarEvent {
 
         // 種目, 重量, セット数, 回数を取り出す (無かったらnil)
         guard let exerciseName = info["種目"],
-              let weight = info["重量"] // 例 "60 kg"
+            let weight = info["重量"]  // 例 "60 kg"
         else {
             return nil
         }
 
         // セット数, 回数 は Intに変換
         guard let setsString = info["セット数"],
-              let sets = Int(setsString),
-              let repsString = info["回数"],
-              let reps = Int(repsString)
+            let sets = Int(setsString),
+            let repsString = info["回数"],
+            let reps = Int(repsString)
         else {
             return nil
         }
@@ -47,7 +47,7 @@ extension CalendarEvent {
         // start/end から iOS の Date を復元する例
         // (start?.dateTime を ISO8601 でデコードして使う など)
         guard let startDT = start?.dateTime,
-              let parsedDate = ISO8601DateFormatter().date(from: startDT)
+            let parsedDate = ISO8601DateFormatter().date(from: startDT)
         else {
             return nil
         }
