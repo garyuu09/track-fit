@@ -1,6 +1,14 @@
 # TrackFit 🏋️‍♂️
 
+
 TrackFitは、日々の筋力トレーニングを手軽に記録し、Googleカレンダーと連携して可視化できるiOSフィットネスアプリです。
+
+<img src="https://github.com/user-attachments/assets/bfe312b9-2ff9-4db6-9676-eed4038469a0" width="15%">
+<img src="https://github.com/user-attachments/assets/1f1ac444-9615-4d41-b294-a984688e6863" width="15%">
+<img src="https://github.com/user-attachments/assets/4baddfde-2d86-4903-8057-b2f4ec7cf8c9" width="15%">
+<img src="https://github.com/user-attachments/assets/50b15e72-f0b8-471b-926f-89d7ba295a47" width="15%">
+<img src="https://github.com/user-attachments/assets/7715acfb-3bb8-4ada-82c2-e1a2e74a8e8f" width="15%">
+<img src="https://github.com/user-attachments/assets/c747c591-214b-45a7-9adf-c0454f62020b" width="15%">
 
 ## 📱 システム要件
 
@@ -51,10 +59,6 @@ TrackFit/
 ### テスト
 - Swift Testing フレームワークを使用
 - 実行: `⌘+U` または Xcode Test Navigator
-
-## 📸 スクリーンショット
-
-[今後、メイン画面、設定画面、トレーニング記録画面のスクリーンショットを追加予定]
 
 ## 📝 セットアップ手順
 
