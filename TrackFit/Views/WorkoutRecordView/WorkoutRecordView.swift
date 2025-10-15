@@ -436,7 +436,7 @@ struct WorkoutRecordView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 60, height: 60)
-                    .glassEffect()
+                    .glassEffect(.regular.tint(.white).interactive())
 
             } else {
                 HStack(spacing: 8) {
