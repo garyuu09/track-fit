@@ -214,31 +214,7 @@ struct WorkoutRecordView: View {
                 }
                 // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
-                    Button(action: {
-                        // シートを表示させる
-                        showDatePicker = true
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus.circle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-
-                            Text("トレーニング日を追加")
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .clipShape(Capsule())
-                        .shadow(
-                            color: Color.black.opacity(0.2),
-                            radius: 8, x: 0, y: 4)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 8)
-                    .zIndex(1)
+                    addTrainingButton()
                 }
                 .overlay {
                     if filteredWorkouts.isEmpty {
@@ -449,6 +425,42 @@ struct WorkoutRecordView: View {
         .sheet(isPresented: $showCalendarHistory) {
             WorkoutCalendarHistoryView()
         }
+    }
+
+    private func addTrainingButton() -> some View {
+        Button(action: {
+            showDatePicker = true
+        }) {
+            if #available(iOS 26.0, *) {
+                Image(systemName: "plus.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 60, height: 60)
+                    .glassEffect(.regular.tint(.white).interactive())
+
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                    Text("トレーニング日を追加")
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(Color.accentColor)
+                .clipShape(Capsule())
+                .shadow(
+                    color: Color.black.opacity(0.2),
+                    radius: 8, x: 0, y: 4
+                )
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 8)
+        .zIndex(1)
     }
 
     private func deleteDailyWorkout(at offsets: IndexSet) {
