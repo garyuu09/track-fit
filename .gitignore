@@ -14,6 +14,7 @@ build/
 *.xcuserstate
 *.xcscmblueprint
 *.xccheckout
+buildServer.json
 
 #------------------------------------------------------------
 # SwiftPM (Swift Package Manager)
@@ -51,3 +52,8 @@ claude-*.log
 # その他の AI ツール関連の一時ファイル
 .ai-temp/
 ai-generated-*
+
+#------------------------------------------------------------
+# VS Code 関連ファイル
+#------------------------------------------------------------
+.vscode/
