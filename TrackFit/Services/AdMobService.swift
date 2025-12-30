@@ -1,14 +1,31 @@
-import Foundation
+import AppTrackingTransparency
 import GoogleMobileAds
 
 class AdMobService: NSObject, ObservableObject {
     static let shared = AdMobService()
+    private var isInitialized = false
 
     private override init() {
         super.init()
     }
 
+    /// ATTでトラッキング許可をリクエストし、完了後にAdMobを初期化する
+    func requestTrackingAuthorization() {
+        if isInitialized { return }
+
+        // 少し遅延させてからリクエストを行う（アプリ起動直後の競合を避けるため）
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                // 許可・拒否に関わらずAdMobを初期化（許可されていればIDFAが使われる）
+                self.initializeAdMob()
+            }
+        }
+    }
+
     func initializeAdMob() {
+        if isInitialized { return }
+        isInitialized = true
+
         MobileAds.shared.start { initializationStatus in
             #if DEBUG
                 print("AdMob initialization completed with status: \(initializationStatus)")
