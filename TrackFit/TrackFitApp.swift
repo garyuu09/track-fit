@@ -12,10 +12,7 @@ import SwiftUI
 struct TrackFitApp: App {
     @AppStorage("displayMode") var displayMode: DisplayMode = .system
 
-    init() {
-        // AdMobの初期化
-        AdMobService.shared.initializeAdMob()
-    }
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -25,6 +22,11 @@ struct TrackFitApp: App {
                     displayMode == .system ? nil : (displayMode == .dark ? .dark : .light)
                 )
                 .modelContainer(for: [DailyWorkout.self, Exercise.self])
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        AdMobService.shared.requestTrackingAuthorization()
+                    }
+                }
         }
     }
 }
