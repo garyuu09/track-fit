@@ -14,14 +14,10 @@ struct AdMobBannerView: UIViewRepresentable {
         bannerView.adUnitID = adUnitID
 
         // iOS 15以降とそれ以前での対応
-        if #available(iOS 15.0, *) {
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                let window = windowScene.windows.first
-            {
-                bannerView.rootViewController = window.rootViewController
-            }
-        } else {
-            bannerView.rootViewController = UIApplication.shared.windows.first?.rootViewController
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+            let window = windowScene.windows.first
+        {
+            bannerView.rootViewController = window.rootViewController
         }
 
         bannerView.load(Request())
