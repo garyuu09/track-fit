@@ -66,7 +66,13 @@ struct ExerciseManagementView: View {
                 }
             }
         }
-        .sheet(isPresented: $exerciseViewModel.isShowingAddExercise) {
+        .sheet(
+            isPresented: $exerciseViewModel.isShowingAddExercise,
+            onDismiss: {
+                // シートが完全に閉じた後にデータを再取得
+                exerciseViewModel.fetchExercises()
+            }
+        ) {
             ExerciseFormView(
                 title: "新しい種目を追加",
                 exercise: nil,
@@ -76,7 +82,14 @@ struct ExerciseManagementView: View {
                 onDelete: nil
             )
         }
-        .sheet(isPresented: $exerciseViewModel.isShowingEditExercise) {
+        .sheet(
+            isPresented: $exerciseViewModel.isShowingEditExercise,
+            onDismiss: {
+                // シートが完全に閉じた後にデータを再取得
+                exerciseViewModel.fetchExercises()
+                exerciseViewModel.selectedExercise = nil
+            }
+        ) {
             if let exercise = exerciseViewModel.selectedExercise {
                 ExerciseFormView(
                     title: "種目を編集",
@@ -87,7 +100,6 @@ struct ExerciseManagementView: View {
                     },
                     onDelete: {
                         exerciseViewModel.deleteExercise(exercise)
-                        exerciseViewModel.selectedExercise = nil
                         exerciseViewModel.isShowingEditExercise = false
                     }
                 )
@@ -218,7 +230,10 @@ struct ExerciseFormView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("保存") {
                         onSave(name, category, memo)
-                        dismiss()
+                        // ViewModelの状態更新完了を待ってからシートを閉じる
+                        DispatchQueue.main.async {
+                            dismiss()
+                        }
                     }
                     .disabled(name.isEmpty || category.isEmpty)
                 }
