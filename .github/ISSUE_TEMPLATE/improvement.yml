@@ -1,0 +1,76 @@
+name: 改善・リファクタリング
+description: コード品質やアーキテクチャの改善提案
+title: "[改善]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        改善・リファクタリングのIssueテンプレートです。
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: このIssueの優先度を選択してください
+      options:
+        - 🔴 高（品質・保守性に重大な影響）
+        - 🟡 中（コード品質改善）
+        - 🟢 低（機能追加・改善）
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-situation
+    attributes:
+      label: 現状の問題点
+      description: 現在の状況と問題点を記載してください
+      placeholder: |
+        例：
+        - ファイルサイズが大きすぎて可読性が低い
+        - テストが不足している
+    validations:
+      required: true
+
+  - type: textarea
+    id: target-files
+    attributes:
+      label: 対象ファイル・フォルダ
+      description: 改善対象のファイルやフォルダを記載してください
+      placeholder: |
+        - `TrackFit/Views/Example.swift`
+        - `TrackFit/Services/`
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: 対応内容
+      description: 具体的な改善案を記載してください
+      placeholder: |
+        1. ファイルをサブコンポーネントに分割
+        2. 共通処理をヘルパーに切り出し
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: 完了条件
+      description: このIssueが完了したと判断する条件を記載してください
+      placeholder: |
+        - [ ] ファイルが300行以下になっている
+        - [ ] ビルドが成功する
+        - [ ] 既存の動作に影響がない
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 備考
+      description: その他の情報があれば記載してください
+      placeholder: 関連するIssueや参考リンクなど
+    validations:
+      required: false
