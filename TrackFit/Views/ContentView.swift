@@ -12,22 +12,33 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var viewModel = CalendarViewModel()
-    @State var selection = 0
+    @State private var selection: TabSelection = .home
+    @State private var isSearchPresented = false
     @State private var accessToken: String?
 
-    var body: some View {
-        TabView(selection: $selection) {
-            WorkoutRecordView()
-                .tabItem {
-                    Label("トレーニング記録", systemImage: "timer")
-                }
-                .tag(0)
+    enum TabSelection {
+        case home
+        case workout
+        case history
+        case setting
+    }
 
-            SettingView()
-                .tabItem {
-                    Label("設定", systemImage: "gearshape")
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            TabView(selection: $selection) {
+                Tab("ホーム", systemImage: "house", value: .home) {
+                    HomeView()
                 }
-                .tag(1)
+                Tab("トレーニング記録", systemImage: "timer", value: .workout) {
+                    WorkoutRecordView()
+                }
+                Tab(value: .history, role: .search) {
+                    TrainingHistoryView(isSearchPresented: $isSearchPresented)
+                }
+                Tab("設定", systemImage: "gearshape", value: .setting) {
+                    SettingView()
+                }
+            }
         }
     }
 }
