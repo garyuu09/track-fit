@@ -13,13 +13,15 @@ class ExerciseViewModel: ObservableObject {
     private var modelContext: ModelContext
 
     @Published var exercises: [Exercise] = []
+    @Published var categories: [String] = []
     @Published var selectedExercise: Exercise?
     @Published var isShowingAddExercise = false
     @Published var isShowingEditExercise = false
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        fetchExercises()
+        // initでのfetchExercises呼び出しを削除
+        // onAppearで呼ばれるため、ここでは不要
     }
 
     func fetchExercises() {
@@ -28,6 +30,7 @@ class ExerciseViewModel: ObservableObject {
                 sortBy: [SortDescriptor(\.name)]
             )
             exercises = try modelContext.fetch(descriptor)
+            updateCategories()
         } catch {
             #if DEBUG
                 print("Error fetching exercises: \(error)")
@@ -39,19 +42,22 @@ class ExerciseViewModel: ObservableObject {
         let newExercise = Exercise(name: name, category: category, memo: memo)
         modelContext.insert(newExercise)
         saveContext()
-        fetchExercises()
+        // 注意: ここで配列を更新しない
+        // シートのonDismissでfetchExercises()を呼び出す
     }
 
     func updateExercise(_ exercise: Exercise, name: String, category: String, memo: String) {
         exercise.updateExercise(name: name, category: category, memo: memo)
         saveContext()
-        fetchExercises()
+        // 注意: ここで配列を更新しない
+        // シートのonDismissでfetchExercises()を呼び出す
     }
 
     func deleteExercise(_ exercise: Exercise) {
         modelContext.delete(exercise)
         saveContext()
-        fetchExercises()
+        // 注意: ここで配列を更新しない
+        // シートのonDismissでfetchExercises()を呼び出す
     }
 
     func deleteExercises(at offsets: IndexSet) {
@@ -60,23 +66,27 @@ class ExerciseViewModel: ObservableObject {
             modelContext.delete(exercise)
         }
         saveContext()
-        fetchExercises()
+        // 注意: ここで配列を更新しない
+        // シートのonDismissでfetchExercises()を呼び出す
     }
 
-    private func saveContext() {
+    @discardableResult
+    private func saveContext() -> Bool {
         do {
             try modelContext.save()
+            return true
         } catch {
             #if DEBUG
                 print("Error saving context: \(error)")
             #endif
+            return false
         }
     }
 
-    // カテゴリ一覧を取得
-    var categories: [String] {
+    // カテゴリ一覧を更新
+    private func updateCategories() {
         let uniqueCategories = Set(exercises.map { $0.category })
-        return Array(uniqueCategories).sorted()
+        categories = Array(uniqueCategories).sorted()
     }
 
     // カテゴリ別の種目を取得

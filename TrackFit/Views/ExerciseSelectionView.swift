@@ -100,7 +100,13 @@ struct ExerciseSelectionView: View {
                 }
             }
         }
-        .sheet(isPresented: $isShowingExerciseManagement) {
+        .sheet(
+            isPresented: $isShowingExerciseManagement,
+            onDismiss: {
+                // シートが閉じられた後、データを再取得して同期
+                exerciseViewModel.fetchExercises()
+            }
+        ) {
             ExerciseManagementView(modelContext: modelContext)
         }
         .onAppear {
