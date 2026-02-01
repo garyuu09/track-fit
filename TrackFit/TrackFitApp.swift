@@ -21,7 +21,7 @@ struct TrackFitApp: App {
                 .preferredColorScheme(
                     displayMode == .system ? nil : (displayMode == .dark ? .dark : .light)
                 )
-                .modelContainer(for: [DailyWorkout.self, Exercise.self])
+                .modelContainer(for: [DailyWorkout.self, Exercise.self, RunningRecord.self])
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         AdMobService.shared.requestTrackingAuthorization()

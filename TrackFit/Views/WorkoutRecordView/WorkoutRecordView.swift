@@ -2,9 +2,18 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+// MARK: - ワークアウト種別
+enum WorkoutType: String, CaseIterable {
+    case weightTraining = "筋トレ"
+    case running = "ランニング"
+}
+
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
     @State private var syncingWorkoutIDs: Set<UUID> = []
+    @State private var selectedWorkoutType: WorkoutType = .weightTraining
+    @State private var showRunningForm: Bool = false
+
     enum FilterType: String, CaseIterable, Identifiable {
         case thisWeek, lastWeek, thisMonth, all, custom
         var id: String { self.rawValue }
@@ -26,6 +35,7 @@ struct WorkoutRecordView: View {
     @State private var showCalendarIntegrationPromptAlert: Bool = false
 
     @Query(sort: \DailyWorkout.startDate, order: .forward) private var dailyWorkouts: [DailyWorkout]
+    @Query(sort: \RunningRecord.date, order: .forward) private var runningRecords: [RunningRecord]
     // シートの表示・非表示を管理するフラグ
     @State private var showDatePickerSheet = false
     @State var showDatePicker: Bool = false
@@ -103,9 +113,55 @@ struct WorkoutRecordView: View {
         }
     }
 
+    // フィルタリングされたランニング記録
+    private var filteredRunningRecords: [RunningRecord] {
+        let calendar = Calendar.current
+        let now = Date()
+
+        let filtered: [RunningRecord]
+        switch selectedFilter {
+        case .all:
+            filtered = runningRecords
+        case .thisWeek:
+            guard let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start else {
+                return runningRecords
+            }
+            filtered = runningRecords.filter { $0.date >= startOfWeek && $0.date <= now }
+        case .lastWeek:
+            guard let thisWeekInterval = calendar.dateInterval(of: .weekOfYear, for: now),
+                let lastWeekStart = calendar.date(
+                    byAdding: .weekOfYear, value: -1, to: thisWeekInterval.start)
+            else {
+                return runningRecords
+            }
+            let lastWeekEnd = thisWeekInterval.start
+            filtered = runningRecords.filter { $0.date >= lastWeekStart && $0.date < lastWeekEnd }
+        case .thisMonth:
+            guard let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start else {
+                return runningRecords
+            }
+            filtered = runningRecords.filter { $0.date >= startOfMonth && $0.date <= now }
+        case .custom:
+            filtered = runningRecords.filter {
+                $0.date >= customStartDate && $0.date <= customEndDate
+            }
+        }
+        return filtered.sorted { $0.date < $1.date }
+    }
+
     var body: some View {
         ZStack {
             NavigationStack {
+                // MARK: ワークアウト種別切替
+                Picker("ワークアウト種別", selection: $selectedWorkoutType) {
+                    ForEach(WorkoutType.allCases, id: \.self) { type in
+                        Text(type.rawValue).tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
+
                 Picker("期間フィルター", selection: $selectedFilter) {
                     Text("今週").tag(FilterType.thisWeek)
                     Text("先週").tag(FilterType.lastWeek)
@@ -134,67 +190,110 @@ struct WorkoutRecordView: View {
                     .background(Color(.systemBackground))
 
                 List {
-                    Section(
-                        header:
-                            HStack {
-                                if selectedFilter == .custom {
-                                    Button(action: {
-                                        showCustomDateSheet = true
-                                    }) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "calendar")
-                                            Text(dateRangeLabel)
-                                                .underline()
+                    if selectedWorkoutType == .weightTraining {
+                        // MARK: - 筋トレ記録リスト
+                        Section(
+                            header:
+                                HStack {
+                                    if selectedFilter == .custom {
+                                        Button(action: {
+                                            showCustomDateSheet = true
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "calendar")
+                                                Text(dateRangeLabel)
+                                                    .underline()
+                                            }
+                                            .font(.caption)
+                                            .foregroundColor(.accentColor)
                                         }
-                                        .font(.caption)
-                                        .foregroundColor(.accentColor)
-                                    }
-                                } else {
-                                    Text(dateRangeLabel)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                    ) {
-                        ForEach(filteredWorkouts) { daily in
-                            NavigationLink(destination: WorkoutSheetView(daily: daily)) {
-                                WorkoutRow(
-                                    daily: daily,
-                                    isSyncing: syncingWorkoutIDs.contains(daily.id),
-                                    showSyncErrorAlert: $showSyncErrorAlert,
-                                    isCalendarFeatureEnabled: isCalendarFeatureEnabled
-                                )
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 8)
-                            }
-                            .onReceive(
-                                NotificationCenter.default.publisher(for: .didStartSyncingWorkout)
-                            ) { notification in
-                                if let id = notification.object as? UUID {
-                                    syncingWorkoutIDs.insert(id)
-                                }
-                            }
-                            .onReceive(
-                                NotificationCenter.default.publisher(for: .didFinishSyncingWorkout)
-                            ) { notification in
-                                if let id = notification.object as? UUID {
-                                    syncingWorkoutIDs.remove(id)
-                                    if id == daily.id && !daily.isSyncedToCalendar {
-                                        showSyncErrorAlert = true
+                                    } else {
+                                        Text(dateRangeLabel)
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
                                     }
                                 }
-                            }
-                            .onReceive(
-                                NotificationCenter.default.publisher(
-                                    for: .shouldShowCalendarIntegrationAlert)
-                            ) { _ in
-                                // 他のアラートが表示されていない場合のみ表示
-                                if !showSyncErrorAlert && !isShowCalendarIntegration {
-                                    showCalendarIntegrationPromptAlert = true
+                        ) {
+                            ForEach(filteredWorkouts) { daily in
+                                NavigationLink(destination: WorkoutSheetView(daily: daily)) {
+                                    WorkoutRow(
+                                        daily: daily,
+                                        isSyncing: syncingWorkoutIDs.contains(daily.id),
+                                        showSyncErrorAlert: $showSyncErrorAlert,
+                                        isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                                    )
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.vertical, 8)
+                                }
+                                .onReceive(
+                                    NotificationCenter.default.publisher(
+                                        for: .didStartSyncingWorkout)
+                                ) { notification in
+                                    if let id = notification.object as? UUID {
+                                        syncingWorkoutIDs.insert(id)
+                                    }
+                                }
+                                .onReceive(
+                                    NotificationCenter.default.publisher(
+                                        for: .didFinishSyncingWorkout)
+                                ) { notification in
+                                    if let id = notification.object as? UUID {
+                                        syncingWorkoutIDs.remove(id)
+                                        if id == daily.id && !daily.isSyncedToCalendar {
+                                            showSyncErrorAlert = true
+                                        }
+                                    }
+                                }
+                                .onReceive(
+                                    NotificationCenter.default.publisher(
+                                        for: .shouldShowCalendarIntegrationAlert)
+                                ) { _ in
+                                    // 他のアラートが表示されていない場合のみ表示
+                                    if !showSyncErrorAlert && !isShowCalendarIntegration {
+                                        showCalendarIntegrationPromptAlert = true
+                                    }
                                 }
                             }
+                            .onDelete(perform: deleteDailyWorkout)
                         }
-                        .onDelete(perform: deleteDailyWorkout)
+                    } else {
+                        // MARK: - ランニング記録リスト
+                        Section(
+                            header:
+                                HStack {
+                                    if selectedFilter == .custom {
+                                        Button(action: {
+                                            showCustomDateSheet = true
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "calendar")
+                                                Text(dateRangeLabel)
+                                                    .underline()
+                                            }
+                                            .font(.caption)
+                                            .foregroundColor(.accentColor)
+                                        }
+                                    } else {
+                                        Text(dateRangeLabel)
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                        ) {
+                            ForEach(filteredRunningRecords) { record in
+                                NavigationLink(
+                                    destination: RunningRecordFormView(editingRecord: record)
+                                ) {
+                                    RunningRow(
+                                        record: record,
+                                        isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                                    )
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.vertical, 8)
+                                }
+                            }
+                            .onDelete(perform: deleteRunningRecord)
+                        }
                     }
                 }
                 .navigationTitle("トレーニング一覧")
@@ -217,46 +316,37 @@ struct WorkoutRecordView: View {
                     addTrainingButton()
                 }
                 .overlay {
-                    if filteredWorkouts.isEmpty {
-                        if dailyWorkouts.isEmpty {
-                            /// はじめての利用（まだ一度も記録がない場合）
-                            ContentUnavailableView(
-                                "トレーニング記録がありません",
-                                systemImage: "figure.run",
-                                description: Text("初めてのトレーニングを記録してみましょう！")
-                            )
-                        } else {
-                            /// フィルター適用時で結果が空の場合
-                            switch selectedFilter {
-                            case .thisWeek:
+                    if selectedWorkoutType == .weightTraining {
+                        // 筋トレのempty state
+                        if filteredWorkouts.isEmpty {
+                            if dailyWorkouts.isEmpty {
                                 ContentUnavailableView(
-                                    "今週のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.plus",
-                                    description: Text("今週もがんばりましょう！新しい目標にチャレンジしてみませんか？")
+                                    "筋トレ記録がありません",
+                                    systemImage: "dumbbell",
+                                    description: Text("初めての筋トレを記録してみましょう！")
                                 )
-                            case .lastWeek:
+                            } else {
                                 ContentUnavailableView(
-                                    "先週のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.minus",
-                                    description: Text("先週は忙しかったですね。今週から新たにスタートしましょう！")
-                                )
-                            case .thisMonth:
-                                ContentUnavailableView(
-                                    "今月のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.plus",
-                                    description: Text("新たな月のスタートです！今月の目標を立ててトレーニングを始めましょう！")
-                                )
-                            case .custom:
-                                ContentUnavailableView(
-                                    "この期間のトレーニング記録がありません",
+                                    "この期間の筋トレ記録がありません",
                                     systemImage: "calendar.badge.exclamationmark",
-                                    description: Text("別の期間を選択してみてください。または新しくトレーニングを始めましょう！")
+                                    description: Text("別の期間を選択してみてください。")
                                 )
-                            case .all:
+                            }
+                        }
+                    } else {
+                        // ランニングのempty state
+                        if filteredRunningRecords.isEmpty {
+                            if runningRecords.isEmpty {
                                 ContentUnavailableView(
-                                    "トレーニング記録がありません",
+                                    "ランニング記録がありません",
                                     systemImage: "figure.run",
-                                    description: Text("初めてのトレーニングを記録してみましょう！")
+                                    description: Text("初めてのランニングを記録してみましょう！")
+                                )
+                            } else {
+                                ContentUnavailableView(
+                                    "この期間のランニング記録がありません",
+                                    systemImage: "calendar.badge.exclamationmark",
+                                    description: Text("別の期間を選択してみてください。")
                                 )
                             }
                         }
@@ -425,11 +515,19 @@ struct WorkoutRecordView: View {
         .sheet(isPresented: $showCalendarHistory) {
             WorkoutCalendarHistoryView()
         }
+        // MARK: ランニング記録フォーム
+        .sheet(isPresented: $showRunningForm) {
+            RunningRecordFormView()
+        }
     }
 
     private func addTrainingButton() -> some View {
         Button(action: {
-            showDatePicker = true
+            if selectedWorkoutType == .weightTraining {
+                showDatePicker = true
+            } else {
+                showRunningForm = true
+            }
         }) {
             if #available(iOS 26.0, *) {
                 Image(systemName: "plus.circle.fill")
@@ -444,7 +542,7 @@ struct WorkoutRecordView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 24, height: 24)
-                    Text("トレーニング日を追加")
+                    Text(selectedWorkoutType == .weightTraining ? "トレーニング日を追加" : "ランニングを追加")
                         .fontWeight(.semibold)
                 }
                 .foregroundColor(.white)
@@ -465,8 +563,15 @@ struct WorkoutRecordView: View {
 
     private func deleteDailyWorkout(at offsets: IndexSet) {
         for index in offsets {
-            let dailyWorkout = dailyWorkouts[index]
+            let dailyWorkout = filteredWorkouts[index]
             context.delete(dailyWorkout)
+        }
+    }
+
+    private func deleteRunningRecord(at offsets: IndexSet) {
+        for index in offsets {
+            let record = filteredRunningRecords[index]
+            context.delete(record)
         }
     }
 }
