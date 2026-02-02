@@ -15,21 +15,24 @@ class Exercise: Identifiable {
     var name: String
     var category: String
     var memo: String
+    var isRunning: Bool = false  // ランニング種目かどうか
     var createdAt: Date
     var updatedAt: Date
 
-    init(name: String, category: String, memo: String = "") {
+    init(name: String, category: String, memo: String = "", isRunning: Bool = false) {
         self.name = name
         self.category = category
         self.memo = memo
+        self.isRunning = isRunning
         self.createdAt = Date()
         self.updatedAt = Date()
     }
 
-    func updateExercise(name: String, category: String, memo: String) {
+    func updateExercise(name: String, category: String, memo: String, isRunning: Bool = false) {
         self.name = name
         self.category = category
         self.memo = memo
+        self.isRunning = isRunning
         self.updatedAt = Date()
     }
 }

@@ -38,16 +38,18 @@ class ExerciseViewModel: ObservableObject {
         }
     }
 
-    func addExercise(name: String, category: String, memo: String = "") {
-        let newExercise = Exercise(name: name, category: category, memo: memo)
+    func addExercise(name: String, category: String, memo: String = "", isRunning: Bool = false) {
+        let newExercise = Exercise(name: name, category: category, memo: memo, isRunning: isRunning)
         modelContext.insert(newExercise)
         saveContext()
         // 注意: ここで配列を更新しない
         // シートのonDismissでfetchExercises()を呼び出す
     }
 
-    func updateExercise(_ exercise: Exercise, name: String, category: String, memo: String) {
-        exercise.updateExercise(name: name, category: category, memo: memo)
+    func updateExercise(
+        _ exercise: Exercise, name: String, category: String, memo: String, isRunning: Bool = false
+    ) {
+        exercise.updateExercise(name: name, category: category, memo: memo, isRunning: isRunning)
         saveContext()
         // 注意: ここで配列を更新しない
         // シートのonDismissでfetchExercises()を呼び出す
