@@ -76,8 +76,9 @@ struct ExerciseManagementView: View {
             ExerciseFormView(
                 title: "新しい種目を追加",
                 exercise: nil,
-                onSave: { name, category, memo in
-                    exerciseViewModel.addExercise(name: name, category: category, memo: memo)
+                onSave: { name, category, memo, isRunning in
+                    exerciseViewModel.addExercise(
+                        name: name, category: category, memo: memo, isRunning: isRunning)
                 },
                 onDelete: nil
             )
@@ -94,9 +95,10 @@ struct ExerciseManagementView: View {
                 ExerciseFormView(
                     title: "種目を編集",
                     exercise: exercise,
-                    onSave: { name, category, memo in
+                    onSave: { name, category, memo, isRunning in
                         exerciseViewModel.updateExercise(
-                            exercise, name: name, category: category, memo: memo)
+                            exercise, name: name, category: category, memo: memo,
+                            isRunning: isRunning)
                     },
                     onDelete: {
                         exerciseViewModel.deleteExercise(exercise)
@@ -141,12 +143,13 @@ struct ExerciseRowView: View {
 struct ExerciseFormView: View {
     let title: String
     let exercise: Exercise?
-    let onSave: (String, String, String) -> Void
+    let onSave: (String, String, String, Bool) -> Void  // isRunningパラメータ追加
     let onDelete: (() -> Void)?
 
     @State private var name: String = ""
     @State private var category: String = ""
     @State private var memo: String = ""
+    @State private var isRunning: Bool = false  // ランニング種目フラグ
     @State private var isShowingDeleteConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
@@ -229,7 +232,7 @@ struct ExerciseFormView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("保存") {
-                        onSave(name, category, memo)
+                        onSave(name, category, memo, isRunning)
                         // ViewModelの状態更新完了を待ってからシートを閉じる
                         DispatchQueue.main.async {
                             dismiss()
@@ -253,6 +256,7 @@ struct ExerciseFormView: View {
                 name = exercise.name
                 category = exercise.category
                 memo = exercise.memo
+                isRunning = exercise.isRunning
             }
         }
     }

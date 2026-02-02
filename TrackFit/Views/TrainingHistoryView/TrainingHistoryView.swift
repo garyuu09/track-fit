@@ -11,14 +11,13 @@ struct TrainingHistoryView: View {
     }
 
     // カテゴリごとにグループ化された種目リスト
-    // [CategoryName: [Exercise]]
     private var groupedExercises: [(category: String, exercises: [Exercise])] {
         let filtered = exercises.filter {
             searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
         }
         let grouped = Dictionary(grouping: filtered, by: { $0.category })
         return grouped.map { (category: $0.key, exercises: $0.value) }
-            .sorted { $0.category < $1.category }  // カテゴリ名でソート
+            .sorted { $0.category < $1.category }
     }
 
     var body: some View {
@@ -27,7 +26,9 @@ struct TrainingHistoryView: View {
                 ForEach(groupedExercises, id: \.category) { group in
                     Section(header: Text(group.category)) {
                         ForEach(group.exercises) { exercise in
-                            NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+                            NavigationLink(
+                                destination: ExerciseDetailView(exercise: exercise)
+                            ) {
                                 VStack(alignment: .leading) {
                                     Text(exercise.name)
                                         .font(.headline)
@@ -43,7 +44,10 @@ struct TrainingHistoryView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, isPresented: $isSearchPresented, prompt: "種目を検索")
+            .searchable(
+                text: $searchText, isPresented: $isSearchPresented,
+                prompt: "種目を検索"
+            )
             .navigationTitle("履歴")
             .overlay {
                 if exercises.isEmpty {

@@ -342,11 +342,19 @@ struct SelectedWorkoutDetailView: View {
                             Text(record.exerciseName)
                                 .font(.caption)
                             Spacer()
-                            Text(
-                                "\(record.weight, specifier: "%.1f")kg × \(record.reps)回 × \(record.sets)セット"
-                            )
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            if record.isRunning {
+                                Text(
+                                    "\(record.distance ?? 0, specifier: "%.2f")km - \(record.durationString)"
+                                )
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            } else {
+                                Text(
+                                    "\(record.weight ?? 0, specifier: "%.1f")kg × \(record.reps ?? 0)回 × \(record.sets ?? 0)セット"
+                                )
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }

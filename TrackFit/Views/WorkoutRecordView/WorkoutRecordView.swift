@@ -5,6 +5,7 @@ import SwiftUI
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
     @State private var syncingWorkoutIDs: Set<UUID> = []
+
     enum FilterType: String, CaseIterable, Identifiable {
         case thisWeek, lastWeek, thisMonth, all, custom
         var id: String { self.rawValue }
@@ -106,6 +107,7 @@ struct WorkoutRecordView: View {
     var body: some View {
         ZStack {
             NavigationStack {
+
                 Picker("期間フィルター", selection: $selectedFilter) {
                     Text("今週").tag(FilterType.thisWeek)
                     Text("先週").tag(FilterType.lastWeek)
@@ -134,6 +136,7 @@ struct WorkoutRecordView: View {
                     .background(Color(.systemBackground))
 
                 List {
+                    // MARK: - 筋トレ記録リスト
                     Section(
                         header:
                             HStack {
@@ -168,14 +171,16 @@ struct WorkoutRecordView: View {
                                 .padding(.vertical, 8)
                             }
                             .onReceive(
-                                NotificationCenter.default.publisher(for: .didStartSyncingWorkout)
+                                NotificationCenter.default.publisher(
+                                    for: .didStartSyncingWorkout)
                             ) { notification in
                                 if let id = notification.object as? UUID {
                                     syncingWorkoutIDs.insert(id)
                                 }
                             }
                             .onReceive(
-                                NotificationCenter.default.publisher(for: .didFinishSyncingWorkout)
+                                NotificationCenter.default.publisher(
+                                    for: .didFinishSyncingWorkout)
                             ) { notification in
                                 if let id = notification.object as? UUID {
                                     syncingWorkoutIDs.remove(id)
@@ -217,48 +222,20 @@ struct WorkoutRecordView: View {
                     addTrainingButton()
                 }
                 .overlay {
+                    // 筋トレのempty state
                     if filteredWorkouts.isEmpty {
                         if dailyWorkouts.isEmpty {
-                            /// はじめての利用（まだ一度も記録がない場合）
                             ContentUnavailableView(
-                                "トレーニング記録がありません",
-                                systemImage: "figure.run",
-                                description: Text("初めてのトレーニングを記録してみましょう！")
+                                "筋トレ記録がありません",
+                                systemImage: "dumbbell",
+                                description: Text("初めての筋トレを記録してみましょう！")
                             )
                         } else {
-                            /// フィルター適用時で結果が空の場合
-                            switch selectedFilter {
-                            case .thisWeek:
-                                ContentUnavailableView(
-                                    "今週のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.plus",
-                                    description: Text("今週もがんばりましょう！新しい目標にチャレンジしてみませんか？")
-                                )
-                            case .lastWeek:
-                                ContentUnavailableView(
-                                    "先週のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.minus",
-                                    description: Text("先週は忙しかったですね。今週から新たにスタートしましょう！")
-                                )
-                            case .thisMonth:
-                                ContentUnavailableView(
-                                    "今月のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.plus",
-                                    description: Text("新たな月のスタートです！今月の目標を立ててトレーニングを始めましょう！")
-                                )
-                            case .custom:
-                                ContentUnavailableView(
-                                    "この期間のトレーニング記録がありません",
-                                    systemImage: "calendar.badge.exclamationmark",
-                                    description: Text("別の期間を選択してみてください。または新しくトレーニングを始めましょう！")
-                                )
-                            case .all:
-                                ContentUnavailableView(
-                                    "トレーニング記録がありません",
-                                    systemImage: "figure.run",
-                                    description: Text("初めてのトレーニングを記録してみましょう！")
-                                )
-                            }
+                            ContentUnavailableView(
+                                "この期間の筋トレ記録がありません",
+                                systemImage: "calendar.badge.exclamationmark",
+                                description: Text("別の期間を選択してみてください。")
+                            )
                         }
                     }
                 }
@@ -465,7 +442,7 @@ struct WorkoutRecordView: View {
 
     private func deleteDailyWorkout(at offsets: IndexSet) {
         for index in offsets {
-            let dailyWorkout = dailyWorkouts[index]
+            let dailyWorkout = filteredWorkouts[index]
             context.delete(dailyWorkout)
         }
     }
@@ -529,11 +506,19 @@ struct WorkoutRow: View {
                 ForEach(daily.records) { record in
                     GridRow {
                         Text(record.exerciseName)
-                        Text("\(record.weight, specifier: "%.1f")kg")
-                        Text("x")
-                        Text("\(record.reps)回")
-                        Text("x")
-                        Text("\(record.sets)セット")
+                        if record.isRunning {
+                            Text("\(record.distance ?? 0, specifier: "%.2f")km")
+                            Text("-")
+                            Text(record.durationString)
+                            Text("")
+                            Text(record.paceString)
+                        } else {
+                            Text("\(record.weight ?? 0, specifier: "%.1f")kg")
+                            Text("x")
+                            Text("\(record.reps ?? 0)回")
+                            Text("x")
+                            Text("\(record.sets ?? 0)セット")
+                        }
                     }
                     .font(.caption)
                 }

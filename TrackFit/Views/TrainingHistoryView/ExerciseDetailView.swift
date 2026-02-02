@@ -6,12 +6,14 @@ struct ExerciseDetailView: View {
     let exercise: Exercise
     @Query(sort: \DailyWorkout.startDate, order: .reverse) private var workouts: [DailyWorkout]
 
-    // この種目前の記録のみを抽出（日付降順）
+    // この種目の記録のみを抽出（日付降順）- 筋トレのみ（isRunning == false）
     private var exerciseHistory: [(date: Date, record: WorkoutRecord)] {
         var history: [(Date, WorkoutRecord)] = []
         for workout in workouts {
-            // この日のワークアウトに含まれる、対象種目の記録を探す
-            let matches = workout.records.filter { $0.exerciseName == exercise.name }
+            // この日のワークアウトに含まれる、対象種目の記録を探す（筋トレのみ）
+            let matches = workout.records.filter {
+                $0.exerciseName == exercise.name && !$0.isRunning
+            }
             for record in matches {
                 history.append((workout.startDate, record))
             }
@@ -19,10 +21,15 @@ struct ExerciseDetailView: View {
         return history
     }
 
-    // グラフ用: 日付昇順にならべかえ
+    // グラフ用: 日付昇順にならべかえ（重量がnilでないもののみ）
     private var chartData: [(date: Date, maxWeight: Double)] {
         let history = exerciseHistory.reversed()  // 昇順にする
-        return history.map { ($0.date, $0.record.weight) }
+        return history.compactMap { item in
+            if let weight = item.record.weight {
+                return (item.date, weight)
+            }
+            return nil
+        }
     }
 
     var body: some View {
@@ -70,10 +77,12 @@ struct ExerciseDetailView: View {
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text("\(item.record.weight, specifier: "%.1f") kg")
+                                Text("\(item.record.weight ?? 0, specifier: "%.1f") kg")
                                     .fontWeight(.bold)
-                                Text("\(item.record.reps) reps × \(item.record.sets) sets")
-                                    .font(.caption)
+                                Text(
+                                    "\(item.record.reps ?? 0) reps × \(item.record.sets ?? 0) sets"
+                                )
+                                .font(.caption)
                             }
                         }
                     }

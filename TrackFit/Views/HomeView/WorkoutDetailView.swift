@@ -34,12 +34,21 @@ struct WorkoutDetailView: View {
                                 .font(.headline)
 
                             HStack {
-                                Text("\(record.weight.formatted()) kg")
-                                    .fontWeight(.bold)
-                                Text("×")
-                                Text("\(record.reps)回")
-                                Text("×")
-                                Text("\(record.sets)セット")
+                                if record.isRunning {
+                                    Text("\(record.distance ?? 0, specifier: "%.2f")km")
+                                        .fontWeight(.bold)
+                                    Text("-")
+                                    Text(record.durationString)
+                                    Text("-")
+                                    Text(record.paceString)
+                                } else {
+                                    Text("\((record.weight ?? 0).formatted()) kg")
+                                        .fontWeight(.bold)
+                                    Text("×")
+                                    Text("\(record.reps ?? 0)回")
+                                    Text("×")
+                                    Text("\(record.sets ?? 0)セット")
+                                }
                             }
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
