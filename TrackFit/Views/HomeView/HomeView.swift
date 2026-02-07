@@ -11,6 +11,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @Query(sort: \DailyWorkout.startDate, order: .reverse) private var workouts: [DailyWorkout]
+    @Query(sort: \RunningRecord.date, order: .reverse) private var runningRecords: [RunningRecord]
 
     var body: some View {
         NavigationStack {
@@ -47,10 +48,13 @@ struct HomeView: View {
             }
             .navigationTitle("ホーム")
             .onAppear {
-                viewModel.updateStats(workouts: workouts)
+                viewModel.updateStats(workouts: workouts, runningRecords: runningRecords)
             }
             .onChange(of: workouts) { _, newWorkouts in
-                viewModel.updateStats(workouts: newWorkouts)
+                viewModel.updateStats(workouts: newWorkouts, runningRecords: runningRecords)
+            }
+            .onChange(of: runningRecords) { _, newRecords in
+                viewModel.updateStats(workouts: workouts, runningRecords: newRecords)
             }
         }
     }
