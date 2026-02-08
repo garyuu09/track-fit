@@ -8,6 +8,10 @@
 import Foundation
 import SwiftData
 
+/// トレーニング種目のCRUD操作を管理するViewModel
+///
+/// SwiftDataの`ModelContext`を通じて`Exercise`モデルの取得・追加・更新・削除を行う。
+/// カテゴリ別のグループ化機能も提供する。
 @MainActor
 class ExerciseViewModel: ObservableObject {
     private var modelContext: ModelContext

@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Googleカレンダーイベントからトレーニングデータへの変換機能を提供する拡張
 extension CalendarEvent {
     /// description(メモ欄) から WorkoutEventData を解析して返す
     var workoutData: WorkoutEventData? {

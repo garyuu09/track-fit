@@ -1,6 +1,10 @@
 import AppTrackingTransparency
 import GoogleMobileAds
 
+/// Google AdMob広告の初期化と広告ユニットID管理を担当するサービス
+///
+/// ATT（App Tracking Transparency）の許可リクエスト後にAdMobを初期化する。
+/// Debug/Releaseビルドに応じてテスト用・本番用の広告ユニットIDを自動切り替えする。
 class AdMobService: NSObject, ObservableObject {
     static let shared = AdMobService()
     private var isInitialized = false
