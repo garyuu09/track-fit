@@ -8,7 +8,10 @@
 import Foundation
 import SwiftData
 
-// MARK: - 個別のトレーニング記録モデル
+/// 個別のトレーニング記録を表すSwiftDataモデル
+///
+/// 筋トレ（種目名・重量・回数・セット数）とランニング（距離・時間）の両方に対応。
+/// `isRunning`フラグで種別を判別し、対応するプロパティのみ使用する。
 @Model
 class WorkoutRecord: Identifiable {
     var id = UUID()
