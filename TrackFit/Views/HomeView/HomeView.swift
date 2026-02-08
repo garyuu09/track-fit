@@ -152,14 +152,3 @@ struct RecentWorkoutRow: View {
         .cornerRadius(12)
     }
 }
-
-// プレビュー用に簡略化されたWorkoutDetailView（実際のものがなければ）
-// しかし、既存のファイルにあるはずなので、参照できるか確認が必要。
-// おそらく TrainingHistoryView の配下にある詳細画面を使いたいが、
-// 名前がわからないので一旦仮置きするか、既存のものをimportする。
-// ユーザーの作業ファイル情報に `ExerciseDetailView.swift` はあるが `WorkoutDetailView` は見当たらないので
-// コンテキストから探す必要があるが、一旦NavigationLinkの先は仮定する。
-
-// 修正: WorkoutDetailViewが既存のコードベースに存在しない可能性がある。
-// TrainingHistoryViewの中身を確認していないが、履歴詳細画面はあるはず。
-// TrainingHistoryView.swift を確認して、詳細画面のView名を確認する。

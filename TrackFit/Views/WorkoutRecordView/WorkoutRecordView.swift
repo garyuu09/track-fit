@@ -96,7 +96,6 @@ struct WorkoutRecordView: View {
             }
         }
 
-        // 常に日付昇順でソート
         return filtered.sorted { $0.startDate < $1.startDate }
     }
 
@@ -200,26 +199,7 @@ struct WorkoutRecordView: View {
                     if selectedWorkoutType == .weightTraining {
                         // MARK: - 筋トレ記録リスト
                         Section(
-                            header:
-                                HStack {
-                                    if selectedFilter == .custom {
-                                        Button(action: {
-                                            showCustomDateSheet = true
-                                        }) {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "calendar")
-                                                Text(dateRangeLabel)
-                                                    .underline()
-                                            }
-                                            .font(.caption)
-                                            .foregroundColor(.accentColor)
-                                        }
-                                    } else {
-                                        Text(dateRangeLabel)
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
+                            header: dateRangeSectionHeader()
                         ) {
                             ForEach(filteredWorkouts) { daily in
                                 NavigationLink(destination: WorkoutSheetView(daily: daily)) {
@@ -266,38 +246,15 @@ struct WorkoutRecordView: View {
                     } else {
                         // MARK: - ランニング記録リスト
                         Section(
-                            header:
-                                HStack {
-                                    if selectedFilter == .custom {
-                                        Button(action: {
-                                            showCustomDateSheet = true
-                                        }) {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "calendar")
-                                                Text(dateRangeLabel)
-                                                    .underline()
-                                            }
-                                            .font(.caption)
-                                            .foregroundColor(.accentColor)
-                                        }
-                                    } else {
-                                        Text(dateRangeLabel)
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
+                            header: dateRangeSectionHeader()
                         ) {
                             ForEach(filteredRunningRecords) { record in
                                 RunningRow(
                                     record: record,
-                                    isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                                    onTap: {
+                                        editingRunningRecord = record
+                                    }
                                 )
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 8)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    editingRunningRecord = record
-                                }
                             }
                             .onDelete(perform: deleteRunningRecord)
                         }
@@ -318,7 +275,6 @@ struct WorkoutRecordView: View {
                         EditButton()
                     }
                 }
-                // 丸い追加ボタン（下部固定）
                 .safeAreaInset(edge: .bottom, alignment: .center) {
                     addTrainingButton()
                 }
@@ -359,23 +315,17 @@ struct WorkoutRecordView: View {
                         }
                     }
                 }
-                // シートを表示するためのモディファイア
                 .sheet(isPresented: $showDatePickerSheet) {
-                    // シートの中身
                     VStack(spacing: 20) {
                         Text("トレーニング日を選択してください")
                             .font(.headline)
-
-                        // 日付の選択を行うDatePicker
                         DatePicker(
                             "",
                             selection: $selectedDate,
                             displayedComponents: .date
                         )
                         .datePickerStyle(.compact)
-
                         Button("完了") {
-                            // シートを閉じる
                             showDatePickerSheet = false
                         }
                     }
@@ -386,49 +336,7 @@ struct WorkoutRecordView: View {
                     .padding()
                 }
                 .sheet(isPresented: $showCustomDateSheet) {
-                    NavigationStack {
-                        VStack(spacing: 16) {
-                            // タブ切り替えセグメント
-                            Picker("", selection: $customTabSelection) {
-                                Text("開始日").tag(0)
-                                Text("終了日").tag(1)
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.horizontal)
-
-                            // タブごとに表示するDatePicker
-                            if customTabSelection == 0 {
-                                DatePicker(
-                                    "",
-                                    selection: $customStartDate,
-                                    in: ...customEndDate,
-                                    displayedComponents: .date
-                                )
-                                .datePickerStyle(.wheel)
-                                .labelsHidden()
-                            } else {
-                                DatePicker(
-                                    "",
-                                    selection: $customEndDate,
-                                    in: customStartDate...Date(),
-                                    displayedComponents: .date
-                                )
-                                .datePickerStyle(.wheel)
-                                .labelsHidden()
-                            }
-                        }
-                        .padding()
-                        .presentationDetents([.height(360)])
-                        .navigationTitle("期間を選択")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button("完了") {
-                                    showCustomDateSheet = false
-                                }
-                            }
-                        }
-                    }
+                    customDateSheetContent()
                 }
             }
             if showDatePicker {
@@ -444,14 +352,10 @@ struct WorkoutRecordView: View {
             }
         }
         .onAppear {
-            // カレンダー機能が有効な場合のみ実行
             if isCalendarFeatureEnabled {
-                // 初回起動ならモーダルを出す
                 if !hasShownCalendarIntegration {
                     isShowCalendarIntegration = true
                 }
-
-                // 初回起動時の連携状態チェック
                 Task {
                     await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
                 }
@@ -459,13 +363,11 @@ struct WorkoutRecordView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCalendarFeatureEnabled {
-                // フォアグラウンド復帰時に連携状態をチェック（カレンダー機能が有効な場合のみ）
                 Task {
                     await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
                 }
             }
         }
-        // モーダルで連携画面を表示（カレンダー機能が有効な場合のみ）
         .sheet(
             isPresented: Binding(
                 get: { isShowCalendarIntegration && isCalendarFeatureEnabled },
@@ -483,7 +385,6 @@ struct WorkoutRecordView: View {
                 showIntegrationBanner: $showIntegrationBanner
             )
         }
-        // 連携失敗アラート（カレンダー機能が有効な場合のみ）
         .alert(
             "連携に失敗しました",
             isPresented: Binding(
@@ -500,7 +401,6 @@ struct WorkoutRecordView: View {
         } message: {
             Text("もう一度サインインしてください。")
         }
-        // カレンダー連携促進アラート（カレンダー機能が有効な場合のみ）
         .alert(
             "Googleカレンダーと連携しませんか？",
             isPresented: Binding(
@@ -527,6 +427,75 @@ struct WorkoutRecordView: View {
         }
         .sheet(item: $editingRunningRecord) { record in
             RunningRecordFormView(editingRecord: record)
+        }
+    }
+
+    // MARK: - Private Views
+
+    @ViewBuilder
+    private func dateRangeSectionHeader() -> some View {
+        HStack {
+            if selectedFilter == .custom {
+                Button(action: {
+                    showCustomDateSheet = true
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                        Text(dateRangeLabel)
+                            .underline()
+                    }
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+                }
+            } else {
+                Text(dateRangeLabel)
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+
+    private func customDateSheetContent() -> some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                Picker("", selection: $customTabSelection) {
+                    Text("開始日").tag(0)
+                    Text("終了日").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+
+                if customTabSelection == 0 {
+                    DatePicker(
+                        "",
+                        selection: $customStartDate,
+                        in: ...customEndDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                } else {
+                    DatePicker(
+                        "",
+                        selection: $customEndDate,
+                        in: customStartDate...Date(),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                }
+            }
+            .padding()
+            .presentationDetents([.height(360)])
+            .navigationTitle("期間を選択")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完了") {
+                        showCustomDateSheet = false
+                    }
+                }
+            }
         }
     }
 
@@ -588,154 +557,7 @@ struct WorkoutRecordView: View {
     }
 }
 
-struct WorkoutRow: View {
-    let daily: DailyWorkout
-    let isSyncing: Bool
-    @Binding var showSyncErrorAlert: Bool
-    let isCalendarFeatureEnabled: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(DateHelper.formattedDate(daily.startDate))
-                    .font(.headline)
-
-                Spacer()
-
-                // カレンダー機能が有効な場合のみ同期状態を表示
-                if isCalendarFeatureEnabled {
-                    if isSyncing {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                            Text("連携中…")
-                        }
-                        .font(.footnote)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                    } else if daily.isSyncedToCalendar {
-                        HStack(spacing: 15) {
-                            Image(systemName: "calendar.badge.checkmark")
-                            Text("連携済み")
-                        }
-                        .font(.footnote)
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.green, lineWidth: 1)
-                        )
-                    } else {
-                        HStack(spacing: 15) {
-                            Image(systemName: "calendar.badge.exclamationmark")
-                            Text("未連携")
-                        }
-                        .font(.footnote)
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.red, lineWidth: 1)
-                        )
-                    }
-                }
-            }
-
-            Grid(alignment: .leading) {
-                ForEach(daily.records) { record in
-                    GridRow {
-                        Text(record.exerciseName)
-                        if record.isRunning {
-                            Text("\(record.distance ?? 0, specifier: "%.2f")km")
-                            Text("-")
-                            Text(record.durationString)
-                            Text("")
-                            Text(record.paceString)
-                        } else {
-                            Text("\(record.weight ?? 0, specifier: "%.1f")kg")
-                            Text("x")
-                            Text("\(record.reps ?? 0)回")
-                            Text("x")
-                            Text("\(record.sets ?? 0)セット")
-                        }
-                    }
-                    .font(.caption)
-                }
-            }
-        }
-    }
-}
-
-struct CustomDatePicker: View {
-    @Environment(\.colorScheme) var colorScheme
-
-    var context: ModelContext
-    @Binding var showDatePicker: Bool
-    @Binding var savedDate: Date?
-    var dailyWorkouts: [DailyWorkout]
-    @State var selectedDate: Date = Date()
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.3)
-                .edgesIgnoringSafeArea(.all)
-                .onTapGesture {
-                    showDatePicker = false
-                }
-            VStack {
-                DatePicker(
-                    "",
-                    selection: $selectedDate,
-                    displayedComponents: [.date]
-                )
-                .environment(\.locale, Locale(identifier: "ja_JP"))
-                .environment(\.calendar, Calendar(identifier: .gregorian))
-                .datePickerStyle(.graphical)
-                Divider()
-                HStack {
-                    Button("キャンセル") {
-                        showDatePicker = false
-                    }
-                    Spacer()
-                    Button("保存") {
-                        savedDate = selectedDate
-                        guard let savedDate else { return }
-                        showDatePicker = false
-                        // 新規の日付を追加するなどの処理 (例)
-                        let newDaily = DailyWorkout(
-                            startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60),
-                            records: [], isSyncedToCalendar: false)
-                        context.insert(newDaily)
-                    }
-                }
-                .padding(.vertical, 15)
-                .padding(.horizontal, 10)
-            }
-            .padding(.horizontal, 20)
-            .background(
-                colorScheme == .dark ? Color.black.cornerRadius(30) : Color.white.cornerRadius(30)
-            )
-            .padding(.horizontal, 20)
-        }
-    }
-}
-
-// MARK: - ヘルパー
-private func dateFromString(_ string: String) -> Date {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy/MM/dd"
-    return formatter.date(from: string) ?? Date()
-}
-
 // MARK: - プレビュー
 #Preview {
     WorkoutRecordView()
-}
-
-extension Notification.Name {
-    static let didStartSyncingWorkout = Notification.Name("didStartSyncingWorkout")
-    static let didFinishSyncingWorkout = Notification.Name("didFinishSyncingWorkout")
-    static let shouldShowCalendarIntegrationAlert = Notification.Name(
-        "shouldShowCalendarIntegrationAlert")
 }

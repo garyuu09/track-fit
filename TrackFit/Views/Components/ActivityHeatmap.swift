@@ -36,9 +36,8 @@ struct ActivityHeatmap: View {
                                         .fill(colorForActivity(date: date))
                                         .frame(width: 12, height: 12)
                                 } else {
-                                    // 未来の日付や範囲外
                                     RoundedRectangle(cornerRadius: 2)
-                                        .fill(Color.gray.opacity(0.1))  // 透明ではなく、枠として薄く表示してもいいが、ここでは薄いグレー
+                                        .fill(Color.gray.opacity(0.1))
                                         .frame(width: 12, height: 12)
                                 }
                             }
@@ -66,32 +65,10 @@ struct ActivityHeatmap: View {
     private func dateFor(weekIndex: Int, weekdayIndex: Int) -> Date? {
         let calendar = Calendar.current
         // startDateが含まれる週の始まりを取得 (月曜始まりと仮定)
-        // ここでは単純に startDate から計算するのではなく、グリッドの左端を正確に合わせる必要がある
-        // GitHubのように「一番左の列」は「3ヶ月前の日付が含まれる週」
-
         guard let startOfFirstWeek = calendar.dateInterval(of: .weekOfYear, for: startDate)?.start
         else { return nil }
 
-        // オフセット計算
-        // weekIndex週目の、weekdayIndex日目 (0: Mon?)
-        // CalendarのfirstWeekdayを考慮する必要があるが、ここではシンプルに加算
-
-        // 日本のCalendarは日月火... (Sun=1)
-        // weekdayIndex: 0-6 をどうマッピングするか
-        // ここでは VStack 0 が一番上（月曜または日曜）。
-        // UI的には月曜始まりが一般的。 0: Mon, 1: Tue...
-
-        // startOfFirstWeekが日曜の場合、+1dが月曜。
-        // 面倒なので、正確な日付計算を行う。
-
         let daysToAdd = (weekIndex * 7) + weekdayIndex
-        // しかし、startOfFirstWeekのweekdayを知る必要がある。
-        // startOfFirstWeekは常に日曜(1)だと仮定（日本のカレンダー）
-        // 0番目のセルを日曜にするならそのまま。月曜にするならweekdayIndexとのズレを吸収。
-
-        // ここでは、Visual重視で「とりあえず日付が連続していればOK」とするが、
-        // ちゃんと日付と曜日を合わせる。
-
         return calendar.date(byAdding: .day, value: daysToAdd, to: startOfFirstWeek)
     }
 
@@ -99,9 +76,6 @@ struct ActivityHeatmap: View {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
         let count = activityLog[startOfDay, default: 0]
-
-        // テーマカラー: TrackFitThemeColor (おそらく赤かオレンジ系?)
-        // なければ青などで代用されるが、Assetにあるはず。
 
         if count == 0 {
             return Color.gray.opacity(0.2)

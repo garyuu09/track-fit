@@ -32,9 +32,10 @@ TrackFit is a SwiftUI-based iOS fitness tracking application (iOS 18.0+) that al
 ### Key Directories
 - `Models/` - SwiftData models with `@Model` decorators
 - `Views/` - SwiftUI views organized by feature
-- `ViewModels/` - Observable view models for state management  
+- `ViewModels/` - Observable view models for state management
 - `Services/` - External API integration (GoogleCalendarAPI)
-- `Utilities/` - Helper extensions and utility functions
+- `Enums/` - Enum definitions (RunType etc.)
+- `Utilities/` - Helper extensions and utility functions (`DateHelper`, `KeychainHelper`, `Color+Theme`, `CalendarEvent+Workout`)
 
 ### Data Persistence
 - **SwiftData** for local storage with `@Query` property wrappers
