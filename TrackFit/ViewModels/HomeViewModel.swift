@@ -23,25 +23,32 @@ class HomeViewModel: ObservableObject {
     // ヒートマップ用データ (日付 -> 回数)
     @Published var activityLog: [Date: Int] = [:]
 
-    func updateStats(workouts: [DailyWorkout]) {
+    func updateStats(workouts: [DailyWorkout], runningRecords: [RunningRecord] = []) {
         self.recentWorkouts = Array(workouts.sorted(by: { $0.startDate > $1.startDate }).prefix(5))
-        self.currentWeekStreak = calculateStreak(workouts: workouts)
+        self.currentWeekStreak = calculateStreak(workouts: workouts, runningRecords: runningRecords)
 
-        self.activityLog = calculateActivityLog(workouts: workouts)
+        self.activityLog = calculateActivityLog(workouts: workouts, runningRecords: runningRecords)
     }
 
-    private func calculateStreak(workouts: [DailyWorkout]) -> Int {
-        guard !workouts.isEmpty else { return 0 }
+    private func calculateStreak(
+        workouts: [DailyWorkout], runningRecords: [RunningRecord] = []
+    ) -> Int {
+        guard !workouts.isEmpty || !runningRecords.isEmpty else { return 0 }
 
-        let sortedWorkouts = workouts.sorted { $0.startDate > $1.startDate }
         var streak = 0
         let calendar = Calendar.current
 
         var workoutWeeks = Set<DateComponent>()  // yearForWeekOfYear, weekOfYear
 
-        for workout in sortedWorkouts {
+        for workout in workouts {
             let components = calendar.dateComponents(
                 [.yearForWeekOfYear, .weekOfYear], from: workout.startDate)
+            workoutWeeks.insert(components)
+        }
+
+        for record in runningRecords {
+            let components = calendar.dateComponents(
+                [.yearForWeekOfYear, .weekOfYear], from: record.date)
             workoutWeeks.insert(components)
         }
 
@@ -80,13 +87,20 @@ class HomeViewModel: ObservableObject {
         return streak
     }
 
-    private func calculateActivityLog(workouts: [DailyWorkout]) -> [Date: Int] {
+    private func calculateActivityLog(
+        workouts: [DailyWorkout], runningRecords: [RunningRecord] = []
+    ) -> [Date: Int] {
         let calendar = Calendar.current
         var log: [Date: Int] = [:]
 
         for workout in workouts {
             // 時間情報を切り捨てて日付のみにする
             let date = calendar.startOfDay(for: workout.startDate)
+            log[date, default: 0] += 1
+        }
+
+        for record in runningRecords {
+            let date = calendar.startOfDay(for: record.date)
             log[date, default: 0] += 1
         }
         return log
