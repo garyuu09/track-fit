@@ -82,6 +82,14 @@ TrackFit is a SwiftUI-based iOS fitness tracking application (iOS 18.0+) that al
 - Light/Dark/System theme options via `@AppStorage`
 - Consistent color scheme throughout app
 
+## Pull Request Rules
+
+### UI変更時のスクリーンショット必須ルール
+- **UIの変更があるときは、PRにbefore/afterのスクリーンショットを必ず含めること**
+- スクリーンショットはPRのDescriptionに貼り付ける
+- 対象: レイアウト変更、新規画面追加、コンポーネントの見た目変更など
+- リファクタリングのみ（見た目の変化なし）の場合は不要だが、その旨を明記すること
+
 ## Workflow Notes
 
 - Feature-branch Git workflow with descriptive commits (English/Japanese)
