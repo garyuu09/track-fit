@@ -9,6 +9,10 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+/// ランニング記録の入力フォームを管理するViewModel
+///
+/// 距離・時間・ランニング種別の入力状態を保持し、`RunningRecord`の保存・更新・編集を行う。
+/// ペース計算やバリデーション機能も提供する。
 // MARK: - ランニング記録ViewModel
 @MainActor
 class RunningViewModel: ObservableObject {

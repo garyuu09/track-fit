@@ -8,6 +8,10 @@
 import Foundation
 import SwiftData
 
+/// ホーム画面の状態管理を担当するViewModel
+///
+/// 直近のトレーニング記録、週間ストリーク、アクティビティヒートマップ用データを提供する。
+/// 筋トレ（`DailyWorkout`）とランニング（`RunningRecord`）の両方を統合して集計する。
 @MainActor
 class HomeViewModel: ObservableObject {
     @Published var currentWeekStreak: Int = 0
