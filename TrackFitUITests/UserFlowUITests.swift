@@ -15,6 +15,7 @@ final class UserFlowUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+        sleep(1)
 
         tabBar = TabBar(app: app)
     }

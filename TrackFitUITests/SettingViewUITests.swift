@@ -16,6 +16,7 @@ final class SettingViewUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+        sleep(1)
 
         settingPage = SettingPage(app: app)
         tabBar = TabBar(app: app)

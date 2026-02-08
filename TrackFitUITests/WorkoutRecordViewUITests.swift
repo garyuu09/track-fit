@@ -16,6 +16,7 @@ final class WorkoutRecordViewUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+        sleep(1)
 
         workoutPage = WorkoutRecordPage(app: app)
         tabBar = TabBar(app: app)

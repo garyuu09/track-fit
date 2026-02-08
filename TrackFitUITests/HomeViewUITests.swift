@@ -16,6 +16,7 @@ final class HomeViewUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
+        sleep(1)
 
         homePage = HomePage(app: app)
         tabBar = TabBar(app: app)
