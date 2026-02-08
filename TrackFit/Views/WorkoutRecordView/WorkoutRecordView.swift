@@ -197,67 +197,9 @@ struct WorkoutRecordView: View {
 
                 List {
                     if selectedWorkoutType == .weightTraining {
-                        // MARK: - 筋トレ記録リスト
-                        Section(
-                            header: dateRangeSectionHeader()
-                        ) {
-                            ForEach(filteredWorkouts) { daily in
-                                NavigationLink(destination: WorkoutSheetView(daily: daily)) {
-                                    WorkoutRow(
-                                        daily: daily,
-                                        isSyncing: syncingWorkoutIDs.contains(daily.id),
-                                        showSyncErrorAlert: $showSyncErrorAlert,
-                                        isCalendarFeatureEnabled: isCalendarFeatureEnabled
-                                    )
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.vertical, 8)
-                                }
-                                .onReceive(
-                                    NotificationCenter.default.publisher(
-                                        for: .didStartSyncingWorkout)
-                                ) { notification in
-                                    if let id = notification.object as? UUID {
-                                        syncingWorkoutIDs.insert(id)
-                                    }
-                                }
-                                .onReceive(
-                                    NotificationCenter.default.publisher(
-                                        for: .didFinishSyncingWorkout)
-                                ) { notification in
-                                    if let id = notification.object as? UUID {
-                                        syncingWorkoutIDs.remove(id)
-                                        if id == daily.id && !daily.isSyncedToCalendar {
-                                            showSyncErrorAlert = true
-                                        }
-                                    }
-                                }
-                                .onReceive(
-                                    NotificationCenter.default.publisher(
-                                        for: .shouldShowCalendarIntegrationAlert)
-                                ) { _ in
-                                    // 他のアラートが表示されていない場合のみ表示
-                                    if !showSyncErrorAlert && !isShowCalendarIntegration {
-                                        showCalendarIntegrationPromptAlert = true
-                                    }
-                                }
-                            }
-                            .onDelete(perform: deleteDailyWorkout)
-                        }
+                        weightTrainingListSection
                     } else {
-                        // MARK: - ランニング記録リスト
-                        Section(
-                            header: dateRangeSectionHeader()
-                        ) {
-                            ForEach(filteredRunningRecords) { record in
-                                RunningRow(
-                                    record: record,
-                                    onTap: {
-                                        editingRunningRecord = record
-                                    }
-                                )
-                            }
-                            .onDelete(perform: deleteRunningRecord)
-                        }
+                        runningListSection
                     }
                 }
                 .navigationTitle("トレーニング一覧")
@@ -431,6 +373,67 @@ struct WorkoutRecordView: View {
     }
 
     // MARK: - Private Views
+
+    /// 筋トレ記録リストセクション
+    @ViewBuilder
+    private var weightTrainingListSection: some View {
+        Section(header: dateRangeSectionHeader()) {
+            ForEach(filteredWorkouts) { daily in
+                NavigationLink(destination: WorkoutSheetView(daily: daily)) {
+                    WorkoutRow(
+                        daily: daily,
+                        isSyncing: syncingWorkoutIDs.contains(daily.id),
+                        showSyncErrorAlert: $showSyncErrorAlert,
+                        isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .didStartSyncingWorkout)
+                ) { notification in
+                    if let id = notification.object as? UUID {
+                        syncingWorkoutIDs.insert(id)
+                    }
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .didFinishSyncingWorkout)
+                ) { notification in
+                    if let id = notification.object as? UUID {
+                        syncingWorkoutIDs.remove(id)
+                        if id == daily.id && !daily.isSyncedToCalendar {
+                            showSyncErrorAlert = true
+                        }
+                    }
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .shouldShowCalendarIntegrationAlert)
+                ) { _ in
+                    if !showSyncErrorAlert && !isShowCalendarIntegration {
+                        showCalendarIntegrationPromptAlert = true
+                    }
+                }
+            }
+            .onDelete(perform: deleteDailyWorkout)
+        }
+    }
+
+    /// ランニング記録リストセクション
+    @ViewBuilder
+    private var runningListSection: some View {
+        Section(header: dateRangeSectionHeader()) {
+            ForEach(filteredRunningRecords) { record in
+                RunningRow(
+                    record: record,
+                    isCalendarFeatureEnabled: isCalendarFeatureEnabled
+                )
+                .onTapGesture {
+                    editingRunningRecord = record
+                }
+            }
+            .onDelete(perform: deleteRunningRecord)
+        }
+    }
 
     @ViewBuilder
     private func dateRangeSectionHeader() -> some View {

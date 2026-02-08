@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// Googleカレンダーのイベント取得・管理を担当するViewModel
+///
+/// `GoogleCalendarAPI`を通じてカレンダーイベントの取得・作成・更新を行う。
+/// 認証状態の管理とエラーハンドリングも担当する。
 @MainActor
 class CalendarViewModel: ObservableObject {
     @Published var events: [CalendarEvent] = []

@@ -8,6 +8,10 @@
 import Foundation
 import SwiftData
 
+/// ランニング記録を表すSwiftDataモデル
+///
+/// 距離・時間・ペース・ランニング種別（ジョグ・ランなど）を管理する。
+/// Googleカレンダーとの同期状態も保持し、ホーム画面のアクティビティログにも反映される。
 // MARK: - ランニング記録
 @Model
 class RunningRecord: Identifiable {

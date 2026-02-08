@@ -8,7 +8,10 @@
 import Foundation
 import SwiftData
 
-// MARK: - 1日分のトレーニング記録
+/// 1日分のトレーニング記録を表すSwiftDataモデル
+///
+/// 特定の日に実施した全てのワークアウト（筋トレ・ランニング）をまとめて管理する。
+/// Googleカレンダーとの同期状態も保持する。
 @Model
 class DailyWorkout: Identifiable {
     var id = UUID()

@@ -8,7 +8,10 @@
 import Foundation
 import SwiftData
 
-// MARK: - トレーニング種目モデル
+/// トレーニング種目のマスターデータを表すSwiftDataモデル
+///
+/// ユーザーが登録した種目（ベンチプレス、スクワットなど）を管理する。
+/// カテゴリ（胸、脚など）でグループ化され、履歴画面での種目別表示に使用される。
 @Model
 class Exercise: Identifiable {
     var id = UUID()
