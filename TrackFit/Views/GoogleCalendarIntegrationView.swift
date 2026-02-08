@@ -88,7 +88,7 @@ struct GoogleCalendarIntegrationView: View {
 
                         Button {
                             Task {
-                                let success = try await GoogleCalendarAPI.linkGoogleCalendar()
+                                let success = try await GoogleAuthService.linkGoogleCalendar()
                                 await MainActor.run {
                                     if success {
                                         onFinish(true)
