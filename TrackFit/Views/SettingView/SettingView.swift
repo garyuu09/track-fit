@@ -173,6 +173,7 @@ struct SettingView: View {
                         Text("システム").tag(DisplayMode.system)
                     }
                     .pickerStyle(.automatic)
+                    .accessibilityIdentifier("themeColorPicker")
 
                     Button(action: {
                         isShowingExerciseManagement = true
@@ -187,6 +188,7 @@ struct SettingView: View {
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
+                    .accessibilityIdentifier("exerciseManagementButton")
                 }
                 Section("About TrackFit") {
                     NavigationLink(destination: PrivacyPolicyView()) {
@@ -215,6 +217,7 @@ struct SettingView: View {
                         }
                     )
                     .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("versionInfo")
                 }
             }
             .navigationTitle("設定")
