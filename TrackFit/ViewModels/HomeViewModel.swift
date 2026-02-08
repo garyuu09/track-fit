@@ -50,11 +50,7 @@ class HomeViewModel: ObservableObject {
             [.yearForWeekOfYear, .weekOfYear], from: Date())
         var currentComponents = todayComponents
 
-        // もし今週の記録がなければ、先週からチェック開始（継続扱いにするか次第だが、今回は厳密に「直近」を見る）
-        // ただし、一般的に「今週まだやってない」だけで0に戻るのは悲しいので、
-        // 「今週やってる」OR「先週やってる（今週はまだこれから）」なら継続とみなすロジックが優しい。
-        // ここではシンプルに「連続した週」をカウントする。
-
+        // 今週の記録がなくても先週まではストリーク継続とみなす
         if !workoutWeeks.contains(currentComponents) {
             // 今週ないので先週をチェック
             if let lastWeekDate = calendar.date(byAdding: .weekOfYear, value: -1, to: Date()) {
