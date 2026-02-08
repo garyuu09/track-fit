@@ -19,9 +19,11 @@ struct HomeView: View {
                 VStack(spacing: 20) {
                     // Streak Card
                     StreakCard(streak: viewModel.currentWeekStreak)
+                        .accessibilityIdentifier("streakCard")
 
                     // Heatmap
                     ActivityHeatmap(activityLog: viewModel.activityLog)
+                        .accessibilityIdentifier("activityHeatmap")
 
                     // Recent Activity
                     VStack(alignment: .leading, spacing: 12) {
@@ -34,6 +36,7 @@ struct HomeView: View {
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding()
+                                .accessibilityIdentifier("emptyRecentActivity")
                         } else {
                             ForEach(viewModel.recentWorkouts) { workout in
                                 NavigationLink(destination: WorkoutDetailView(workout: workout)) {
@@ -43,6 +46,7 @@ struct HomeView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("recentActivitySection")
                 }
                 .padding()
             }

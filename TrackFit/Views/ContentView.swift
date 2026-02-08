@@ -29,16 +29,24 @@ struct ContentView: View {
                 Tab("ホーム", systemImage: "house", value: .home) {
                     HomeView()
                 }
+                .accessibilityIdentifier("homeTab")
+
                 Tab("トレーニング記録", systemImage: "timer", value: .workout) {
                     WorkoutRecordView()
                 }
+                .accessibilityIdentifier("workoutTab")
+
                 Tab(value: .history, role: .search) {
                     TrainingHistoryView(isSearchPresented: $isSearchPresented)
                 }
+                .accessibilityIdentifier("historyTab")
+
                 Tab("設定", systemImage: "gearshape", value: .setting) {
                     SettingView()
                 }
+                .accessibilityIdentifier("settingTab")
             }
+            .accessibilityIdentifier("mainTabView")
         }
     }
 }

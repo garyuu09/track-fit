@@ -169,6 +169,7 @@ struct WorkoutRecordView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+                .accessibilityIdentifier("periodFilterPicker")
 
                 // MARK: ワークアウト種別切替
                 Picker("種別", selection: $selectedWorkoutType) {
@@ -177,6 +178,7 @@ struct WorkoutRecordView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
+                .accessibilityIdentifier("workoutTypePicker")
 
                 // MARK: Googleカレンダー未連携バナー（カレンダー機能が有効な場合のみ表示）
                 /// 永続化している`isCalendarLinked`と`hasShownCalendarIntegration`をチェック
@@ -202,6 +204,7 @@ struct WorkoutRecordView: View {
                         runningListSection
                     }
                 }
+                .accessibilityIdentifier("workoutList")
                 .navigationTitle("トレーニング一覧")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -540,6 +543,7 @@ struct WorkoutRecordView: View {
                 )
             }
         }
+        .accessibilityIdentifier("addTrainingButton")
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
         .zIndex(1)
