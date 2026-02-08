@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// トレーニング記録のGoogleカレンダー連携を管理するViewModel
+///
+/// `DailyWorkout`のデータをGoogleカレンダーへ新規作成・更新する機能を提供する。
+/// Keychainからアクセストークンを取得し、`GoogleCalendarAPI`を通じてAPI通信を行う。
 @MainActor
 class WorkoutViewModel: ObservableObject {
     /// 画面で入力するプロパティ

@@ -8,6 +8,10 @@ import Foundation
 import GoogleSignIn
 import GoogleSignInSwift
 
+/// Google Calendar APIとの通信を担当するサービス層
+///
+/// OAuth認証フロー、イベントのCRUD操作、トークンの自動リフレッシュ機能を提供する。
+/// 認証情報は`KeychainHelper`を通じて安全に管理される。
 struct GoogleCalendarAPI {
     // APIのレスポンス全体
     struct EventsResponse: Codable {
