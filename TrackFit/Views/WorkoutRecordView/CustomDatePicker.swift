@@ -1,0 +1,55 @@
+import SwiftData
+import SwiftUI
+
+struct CustomDatePicker: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    var context: ModelContext
+    @Binding var showDatePicker: Bool
+    @Binding var savedDate: Date?
+    var dailyWorkouts: [DailyWorkout]
+    @State var selectedDate: Date = Date()
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    showDatePicker = false
+                }
+            VStack {
+                DatePicker(
+                    "",
+                    selection: $selectedDate,
+                    displayedComponents: [.date]
+                )
+                .environment(\.locale, Locale(identifier: "ja_JP"))
+                .environment(\.calendar, Calendar(identifier: .gregorian))
+                .datePickerStyle(.graphical)
+                Divider()
+                HStack {
+                    Button("キャンセル") {
+                        showDatePicker = false
+                    }
+                    Spacer()
+                    Button("保存") {
+                        savedDate = selectedDate
+                        guard let savedDate else { return }
+                        showDatePicker = false
+                        let newDaily = DailyWorkout(
+                            startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60),
+                            records: [], isSyncedToCalendar: false)
+                        context.insert(newDaily)
+                    }
+                }
+                .padding(.vertical, 15)
+                .padding(.horizontal, 10)
+            }
+            .padding(.horizontal, 20)
+            .background(
+                colorScheme == .dark ? Color.black.cornerRadius(30) : Color.white.cornerRadius(30)
+            )
+            .padding(.horizontal, 20)
+        }
+    }
+}
