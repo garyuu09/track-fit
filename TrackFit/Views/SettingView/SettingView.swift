@@ -91,7 +91,7 @@ struct SettingView: View {
                                 if !newValue {
                                     // 機能をオフにした場合、連携も解除
                                     if isGoogleCalendarLinked {
-                                        GoogleCalendarAPI.unlinkGoogleCalendar()
+                                        GoogleAuthService.unlinkGoogleCalendar()
                                         UserDefaults.standard.set(false, forKey: "isCalendarLinked")
                                         isGoogleCalendarLinked = false
                                         linkedAccountEmail = nil
@@ -123,7 +123,7 @@ struct SettingView: View {
                                             .foregroundColor(.secondary)
 
                                         Button("連携を解除") {
-                                            GoogleCalendarAPI.unlinkGoogleCalendar()
+                                            GoogleAuthService.unlinkGoogleCalendar()
                                             UserDefaults.standard.set(
                                                 false, forKey: "isCalendarLinked")
                                             isGoogleCalendarLinked = false
@@ -223,7 +223,7 @@ struct SettingView: View {
                     loadLinkedStatus()
                     // 連携状態の最新チェック
                     Task {
-                        await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                        await GoogleAuthService.checkAndUpdateLinkingStatus()
                         // チェック後に最新状態を再読み込み
                         await MainActor.run {
                             loadLinkedStatus()

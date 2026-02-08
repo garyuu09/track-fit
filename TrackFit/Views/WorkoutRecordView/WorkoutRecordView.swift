@@ -299,14 +299,14 @@ struct WorkoutRecordView: View {
                     isShowCalendarIntegration = true
                 }
                 Task {
-                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                    await GoogleAuthService.checkAndUpdateLinkingStatus()
                 }
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isCalendarFeatureEnabled {
                 Task {
-                    await GoogleCalendarAPI.checkAndUpdateLinkingStatus()
+                    await GoogleAuthService.checkAndUpdateLinkingStatus()
                 }
             }
         }
