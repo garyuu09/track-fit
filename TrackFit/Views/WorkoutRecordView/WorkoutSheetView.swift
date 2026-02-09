@@ -24,6 +24,8 @@ struct WorkoutSheetView: View {
 
     @Environment(\.modelContext) private var context
     @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
+    @AppStorage("isAppleCalendarLinked") private var isAppleCalendarLinked: Bool = false
+    @AppStorage("appleCalendarIdentifier") private var appleCalendarIdentifier: String = ""
 
     // 2カラムのレイアウトでカード表示
     private let columns = [
@@ -183,7 +185,7 @@ struct WorkoutSheetView: View {
 
     // MARK: - 保存処理
     private func handleSave() {
-        if isCalendarLinked {
+        if isCalendarLinked || isAppleCalendarLinked {
             saveWithCalendarSync()
         } else {
             saveWithoutCalendar()
@@ -195,43 +197,64 @@ struct WorkoutSheetView: View {
             name: .didStartSyncingWorkout, object: daily.id)
         dismiss()
         Task { @MainActor in
-            var isSaveLatestWorkout: Bool
+            // Google Calendar同期
+            if isCalendarLinked {
+                var isSaveLatestWorkout: Bool
 
-            if daily.eventId == nil {
-                isSaveLatestWorkout = await viewModel.createEvent(dailyWorkout: daily)
-                if isSaveLatestWorkout, let newEventId = viewModel.eventId {
-                    daily.eventId = newEventId
-                }
-            } else {
-                isSaveLatestWorkout = await viewModel.updateEvent(dailyWorkout: daily)
-            }
-
-            if isSaveLatestWorkout {
-                daily.isSyncedToCalendar = true
-                do {
-                    try context.save()
-                } catch {
-                    #if DEBUG
-                        print("データ保存エラー: \(error.localizedDescription)")
-                    #endif
-                    daily.isSyncedToCalendar = false
-                }
-            } else {
-                daily.isSyncedToCalendar = false
-                do {
-                    try context.save()
-                } catch {
-                    #if DEBUG
-                        print("データ保存エラー: \(error.localizedDescription)")
-                    #endif
+                if daily.eventId == nil {
+                    isSaveLatestWorkout = await viewModel.createEvent(dailyWorkout: daily)
+                    if isSaveLatestWorkout, let newEventId = viewModel.eventId {
+                        daily.eventId = newEventId
+                    }
+                } else {
+                    isSaveLatestWorkout = await viewModel.updateEvent(dailyWorkout: daily)
                 }
 
-                if let errorMsg = viewModel.errorMessage {
+                daily.isSyncedToCalendar = isSaveLatestWorkout
+
+                if !isSaveLatestWorkout, let errorMsg = viewModel.errorMessage {
                     #if DEBUG
                         print("Google Calendar同期エラー: \(errorMsg)")
                     #endif
                 }
             }
+
+            // Apple Calendar同期
+            if isAppleCalendarLinked {
+                do {
+                    let calId =
+                        appleCalendarIdentifier.isEmpty ? nil : appleCalendarIdentifier
+                    if let existingId = daily.appleEventId {
+                        try AppleCalendarService.updateWorkoutEvent(
+                            eventIdentifier: existingId,
+                            workout: daily,
+                            calendarIdentifier: calId
+                        )
+                    } else {
+                        let newId = try AppleCalendarService.createWorkoutEvent(
+                            workout: daily,
+                            calendarIdentifier: calId
+                        )
+                        daily.appleEventId = newId
+                    }
+                    daily.isSyncedToAppleCalendar = true
+                } catch {
+                    daily.isSyncedToAppleCalendar = false
+                    #if DEBUG
+                        print("Apple Calendar同期エラー: \(error.localizedDescription)")
+                    #endif
+                }
+            }
+
+            // データ保存
+            do {
+                try context.save()
+            } catch {
+                #if DEBUG
+                    print("データ保存エラー: \(error.localizedDescription)")
+                #endif
+            }
+
             NotificationCenter.default.post(
                 name: .didFinishSyncingWorkout, object: daily.id)
         }
@@ -239,6 +262,7 @@ struct WorkoutSheetView: View {
 
     private func saveWithoutCalendar() {
         daily.isSyncedToCalendar = false
+        daily.isSyncedToAppleCalendar = false
         do {
             try context.save()
         } catch {

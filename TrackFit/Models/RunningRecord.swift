@@ -28,6 +28,9 @@ class RunningRecord: Identifiable {
     // Googleカレンダー連携
     var isSyncedToCalendar: Bool = false
     var eventId: String?
+    // Appleカレンダー連携
+    var isSyncedToAppleCalendar: Bool = false
+    var appleEventId: String?
 
     // MARK: - Computed Properties
 
@@ -76,7 +79,9 @@ class RunningRecord: Identifiable {
         averageHeartRate: Int? = nil,
         memo: String? = nil,
         isSyncedToCalendar: Bool = false,
-        eventId: String? = nil
+        eventId: String? = nil,
+        isSyncedToAppleCalendar: Bool = false,
+        appleEventId: String? = nil
     ) {
         self.date = date
         self.distance = distance
@@ -88,5 +93,7 @@ class RunningRecord: Identifiable {
         self.createdAt = Date()
         self.isSyncedToCalendar = isSyncedToCalendar
         self.eventId = eventId
+        self.isSyncedToAppleCalendar = isSyncedToAppleCalendar
+        self.appleEventId = appleEventId
     }
 }

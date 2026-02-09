@@ -89,7 +89,7 @@ struct SettingView: View {
                         Toggle("", isOn: $isCalendarFeatureEnabled)
                             .onChange(of: isCalendarFeatureEnabled) { _, newValue in
                                 if !newValue {
-                                    // 機能をオフにした場合、連携も解除
+                                    // 機能をオフにした場合、全連携を解除
                                     if isGoogleCalendarLinked {
                                         GoogleAuthService.unlinkGoogleCalendar()
                                         UserDefaults.standard.set(false, forKey: "isCalendarLinked")
@@ -97,12 +97,21 @@ struct SettingView: View {
                                         linkedAccountEmail = nil
                                         accessToken = nil
                                     }
+                                    // Appleカレンダー連携も解除
+                                    UserDefaults.standard.set(
+                                        false, forKey: "isAppleCalendarLinked")
+                                    UserDefaults.standard.set(
+                                        "", forKey: "appleCalendarIdentifier")
                                 }
                             }
                     }
 
-                    // カレンダー機能が有効な場合のみGoogleカレンダー連携を表示
+                    // カレンダー機能が有効な場合のみ連携オプションを表示
                     if isCalendarFeatureEnabled {
+                        // Appleカレンダー連携
+                        AppleCalendarSettingSection()
+
+                        // Googleカレンダー連携
                         HStack {
                             Text("Googleカレンダー")
                             Spacer()
