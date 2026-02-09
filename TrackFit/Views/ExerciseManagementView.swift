@@ -23,7 +23,15 @@ struct ExerciseManagementView: View {
             List {
                 if !exerciseViewModel.categories.isEmpty {
                     ForEach(exerciseViewModel.categories, id: \.self) { category in
-                        Section(category) {
+                        Section(
+                            header: HStack(spacing: 6) {
+                                Image(
+                                    systemName: ExerciseCategoryIcon.icon(for: category)
+                                )
+                                .foregroundColor(ExerciseCategoryIcon.color(for: category))
+                                Text(category)
+                            }
+                        ) {
                             ForEach(exerciseViewModel.exercises(for: category)) { exercise in
                                 ExerciseRowView(exercise: exercise) {
                                     exerciseViewModel.selectedExercise = exercise
@@ -177,22 +185,34 @@ struct ExerciseFormView: View {
                             columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 8
                         ) {
                             ForEach(commonCategories, id: \.self) { commonCategory in
+                                let isSelected = category == commonCategory
+                                let categoryColor = ExerciseCategoryIcon.color(
+                                    for: commonCategory)
                                 Button(action: {
                                     category = commonCategory
                                 }) {
-                                    Text(commonCategory)
-                                        .font(.caption)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .frame(maxWidth: .infinity)
-                                        .background(
-                                            category == commonCategory
-                                                ? Color.accentColor : Color.gray.opacity(0.2)
+                                    VStack(spacing: 4) {
+                                        Image(
+                                            systemName: ExerciseCategoryIcon.icon(
+                                                for: commonCategory)
                                         )
+                                        .font(.title3)
                                         .foregroundColor(
-                                            category == commonCategory ? .white : .primary
+                                            isSelected ? .white : categoryColor
                                         )
-                                        .cornerRadius(8)
+                                        Text(commonCategory)
+                                            .font(.caption2)
+                                            .foregroundColor(
+                                                isSelected ? .white : .primary
+                                            )
+                                    }
+                                    .padding(.vertical, 8)
+                                    .frame(maxWidth: .infinity)
+                                    .background(
+                                        isSelected
+                                            ? categoryColor : categoryColor.opacity(0.1)
+                                    )
+                                    .cornerRadius(10)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }

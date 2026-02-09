@@ -71,7 +71,17 @@ struct ExerciseSelectionView: View {
                                 .padding()
                         } else {
                             ForEach(filteredCategories, id: \.self) { category in
-                                Section(category) {
+                                Section(
+                                    header: HStack(spacing: 6) {
+                                        Image(
+                                            systemName: ExerciseCategoryIcon.icon(
+                                                for: category)
+                                        )
+                                        .foregroundColor(
+                                            ExerciseCategoryIcon.color(for: category))
+                                        Text(category)
+                                    }
+                                ) {
                                     ForEach(exercisesForCategory(category)) { exercise in
                                         ExerciseSelectionRowView(exercise: exercise) {
                                             onExerciseSelected(exercise)
