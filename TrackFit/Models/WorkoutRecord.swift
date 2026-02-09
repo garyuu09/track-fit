@@ -29,7 +29,7 @@ class WorkoutRecord: Identifiable {
     var distance: Double?  // km
     var durationSeconds: Int?  // 秒
 
-    // 筋トレ用イニシャライザ
+    /// 筋トレ用イニシャライザ（ランニング関連プロパティはnilで初期化）
     init(exerciseName: String, weight: Double, reps: Int, sets: Int) {
         self.exerciseName = exerciseName
         self.isRunning = false
@@ -40,7 +40,7 @@ class WorkoutRecord: Identifiable {
         self.durationSeconds = nil
     }
 
-    // ランニング用イニシャライザ
+    /// ランニング用イニシャライザ（筋トレ関連プロパティはnilで初期化）
     init(exerciseName: String, distance: Double, durationSeconds: Int) {
         self.exerciseName = exerciseName
         self.isRunning = true
@@ -51,7 +51,7 @@ class WorkoutRecord: Identifiable {
         self.durationSeconds = durationSeconds
     }
 
-    // ペース計算（分/km）
+    /// ランニングペースを「M:SS /km」形式の文字列で返す
     var paceString: String {
         guard let distance = distance, let duration = durationSeconds, distance > 0 else {
             return "--:--"
@@ -62,7 +62,7 @@ class WorkoutRecord: Identifiable {
         return String(format: "%d:%02d /km", minutes, seconds)
     }
 
-    // 時間フォーマット
+    /// 所要時間を「H:MM:SS」または「MM:SS」形式の文字列で返す
     var durationString: String {
         guard let duration = durationSeconds else { return "--:--:--" }
         let hours = duration / 3600

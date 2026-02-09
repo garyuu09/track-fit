@@ -27,6 +27,11 @@ class HomeViewModel: ObservableObject {
     // ヒートマップ用データ (日付 -> 回数)
     @Published var activityLog: [Date: Int] = [:]
 
+    /// トレーニング・ランニングデータからホーム画面の統計情報を更新する
+    ///
+    /// - Parameters:
+    ///   - workouts: 集計対象のトレーニング記録
+    ///   - runningRecords: 集計対象のランニング記録
     func updateStats(workouts: [DailyWorkout], runningRecords: [RunningRecord] = []) {
         self.recentWorkouts = Array(workouts.sorted(by: { $0.startDate > $1.startDate }).prefix(5))
         self.currentWeekStreak = calculateStreak(workouts: workouts, runningRecords: runningRecords)

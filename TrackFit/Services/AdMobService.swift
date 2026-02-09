@@ -26,6 +26,7 @@ class AdMobService: NSObject, ObservableObject {
         }
     }
 
+    /// Google Mobile Ads SDKを初期化する（重複呼び出しは無視される）
     func initializeAdMob() {
         if isInitialized { return }
         isInitialized = true
@@ -37,6 +38,7 @@ class AdMobService: NSObject, ObservableObject {
         }
     }
 
+    /// Info.plistからAdMobアプリIDを取得する
     func getAppID() -> String {
         guard
             let appID = Bundle.main.object(forInfoDictionaryKey: "GADApplicationIdentifier")
@@ -50,6 +52,7 @@ class AdMobService: NSObject, ObservableObject {
         return appID
     }
 
+    /// テスト用バナー広告ユニットIDを取得する（フォールバック付き）
     func getTestAdUnitID() -> String {
         guard
             let testID = Bundle.main.object(forInfoDictionaryKey: "ADMOB_BANNER_UNIT_ID_TEST")
@@ -64,6 +67,7 @@ class AdMobService: NSObject, ObservableObject {
         return testID
     }
 
+    /// 本番用バナー広告ユニットIDを取得する
     func getProductionAdUnitID() -> String {
         guard
             let prodID = Bundle.main.object(forInfoDictionaryKey: "ADMOB_BANNER_UNIT_ID_PROD")
@@ -77,6 +81,7 @@ class AdMobService: NSObject, ObservableObject {
         return prodID
     }
 
+    /// 現在のビルド構成に応じた広告ユニットIDを返す（Debug: テスト用、Release: 本番用）
     func getCurrentAdUnitID() -> String {
         #if DEBUG
             return getTestAdUnitID()
