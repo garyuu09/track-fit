@@ -31,6 +31,7 @@ class Exercise: Identifiable {
         self.updatedAt = Date()
     }
 
+    /// 種目の情報を更新し、更新日時を記録する
     func updateExercise(name: String, category: String, memo: String, isRunning: Bool = false) {
         self.name = name
         self.category = category

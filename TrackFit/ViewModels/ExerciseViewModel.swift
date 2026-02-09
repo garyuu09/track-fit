@@ -28,6 +28,7 @@ class ExerciseViewModel: ObservableObject {
         // onAppearで呼ばれるため、ここでは不要
     }
 
+    /// SwiftDataから全種目を取得し、名前順にソートして保持する
     func fetchExercises() {
         do {
             let descriptor = FetchDescriptor<Exercise>(
@@ -42,6 +43,7 @@ class ExerciseViewModel: ObservableObject {
         }
     }
 
+    /// 新しいトレーニング種目を作成して永続化する
     func addExercise(name: String, category: String, memo: String = "", isRunning: Bool = false) {
         let newExercise = Exercise(name: name, category: category, memo: memo, isRunning: isRunning)
         modelContext.insert(newExercise)
@@ -50,6 +52,7 @@ class ExerciseViewModel: ObservableObject {
         // シートのonDismissでfetchExercises()を呼び出す
     }
 
+    /// 既存の種目情報を更新して永続化する
     func updateExercise(
         _ exercise: Exercise, name: String, category: String, memo: String, isRunning: Bool = false
     ) {
@@ -59,6 +62,7 @@ class ExerciseViewModel: ObservableObject {
         // シートのonDismissでfetchExercises()を呼び出す
     }
 
+    /// 指定した種目を削除して永続化する
     func deleteExercise(_ exercise: Exercise) {
         modelContext.delete(exercise)
         saveContext()
@@ -66,6 +70,7 @@ class ExerciseViewModel: ObservableObject {
         // シートのonDismissでfetchExercises()を呼び出す
     }
 
+    /// IndexSetで指定された複数の種目を一括削除する
     func deleteExercises(at offsets: IndexSet) {
         for index in offsets {
             let exercise = exercises[index]
@@ -95,7 +100,7 @@ class ExerciseViewModel: ObservableObject {
         categories = Array(uniqueCategories).sorted()
     }
 
-    // カテゴリ別の種目を取得
+    /// 指定カテゴリに属する種目の一覧を返す
     func exercises(for category: String) -> [Exercise] {
         return exercises.filter { $0.category == category }
     }
