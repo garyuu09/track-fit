@@ -169,7 +169,7 @@ struct GoogleCalendarAPI {
     }
 
     /// 共通のレスポンスバリデーション
-    private static func validateResponse(_ response: URLResponse, data: Data) throws {
+    static func validateResponse(_ response: URLResponse, data: Data) throws {
         if let httpResponse = response as? HTTPURLResponse,
             !(200..<300).contains(httpResponse.statusCode)
         {
@@ -179,7 +179,7 @@ struct GoogleCalendarAPI {
     }
 
     /// ワークアウトイベントのリクエストボディを生成
-    private static func buildWorkoutEventBody(workout: DailyWorkout, colorId: String)
+    static func buildWorkoutEventBody(workout: DailyWorkout, colorId: String)
         -> [String: Any]
     {
         let startString = DateHelper.iso8601String(from: workout.startDate)
