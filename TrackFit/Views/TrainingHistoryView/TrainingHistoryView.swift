@@ -101,7 +101,17 @@ struct TrainingHistoryView: View {
                 List {
                     if selectedHistoryType == .exercise {
                         ForEach(groupedExercises, id: \.category) { group in
-                            Section(header: Text(group.category)) {
+                            Section(
+                                header: HStack(spacing: 6) {
+                                    Image(
+                                        systemName: ExerciseCategoryIcon.icon(
+                                            for: group.category)
+                                    )
+                                    .foregroundColor(
+                                        ExerciseCategoryIcon.color(for: group.category))
+                                    Text(group.category)
+                                }
+                            ) {
                                 ForEach(group.exercises) { exercise in
                                     NavigationLink(
                                         destination: ExerciseDetailView(exercise: exercise)
