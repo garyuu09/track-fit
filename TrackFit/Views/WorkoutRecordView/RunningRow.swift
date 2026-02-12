@@ -23,7 +23,7 @@ struct RunningRow: View {
 
                 // カレンダー同期状態
                 if isCalendarFeatureEnabled {
-                    if record.isSyncedToCalendar {
+                    if record.isSyncedToCalendar || record.isSyncedToAppleCalendar {
                         HStack(spacing: 4) {
                             Image(systemName: "calendar.badge.checkmark")
                             Text("連携済み")

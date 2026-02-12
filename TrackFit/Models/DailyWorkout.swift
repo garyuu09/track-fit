@@ -18,21 +18,28 @@ class DailyWorkout: Identifiable {
     var startDate: Date
     var endDate: Date
     var eventId: String?
+    var appleEventId: String?
 
     // その日実施したトレーニング一覧
     var records: [WorkoutRecord]
 
     // Googleカレンダー連携済みかどうか
     var isSyncedToCalendar: Bool = false
+    // Appleカレンダー連携済みかどうか
+    var isSyncedToAppleCalendar: Bool = false
 
     init(
         startDate: Date, endDate: Date, records: [WorkoutRecord], eventId: String? = nil,
-        isSyncedToCalendar: Bool
+        appleEventId: String? = nil,
+        isSyncedToCalendar: Bool = false,
+        isSyncedToAppleCalendar: Bool = false
     ) {
         self.startDate = startDate
         self.endDate = endDate
         self.records = records
         self.eventId = eventId
+        self.appleEventId = appleEventId
         self.isSyncedToCalendar = isSyncedToCalendar
+        self.isSyncedToAppleCalendar = isSyncedToAppleCalendar
     }
 }

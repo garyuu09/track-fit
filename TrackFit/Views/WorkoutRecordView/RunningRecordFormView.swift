@@ -13,6 +13,8 @@ struct RunningRecordFormView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = RunningViewModel()
+    @AppStorage("isAppleCalendarLinked") private var isAppleCalendarLinked: Bool = false
+    @AppStorage("appleCalendarIdentifier") private var appleCalendarIdentifier: String = ""
 
     // 編集モード用
     var editingRecord: RunningRecord?
@@ -145,12 +147,52 @@ struct RunningRecordFormView: View {
     }
 
     private func saveRecord() {
+        let record: RunningRecord
         if let existing = editingRecord {
             viewModel.updateRunningRecord(existing)
+            record = existing
         } else {
-            viewModel.saveRunningRecord(context: context)
+            record = viewModel.saveRunningRecord(context: context)
         }
+
+        // Apple Calendar同期
+        if isAppleCalendarLinked {
+            syncRunningToAppleCalendar(record: record)
+            do {
+                try context.save()
+            } catch {
+                #if DEBUG
+                    print("データ保存エラー: \(error.localizedDescription)")
+                #endif
+            }
+        }
+
         dismiss()
+    }
+
+    private func syncRunningToAppleCalendar(record: RunningRecord) {
+        let calId = appleCalendarIdentifier.isEmpty ? nil : appleCalendarIdentifier
+        do {
+            if let existingId = record.appleEventId {
+                try AppleCalendarService.updateRunningEvent(
+                    eventIdentifier: existingId,
+                    record: record,
+                    calendarIdentifier: calId
+                )
+            } else {
+                let newId = try AppleCalendarService.createRunningEvent(
+                    record: record,
+                    calendarIdentifier: calId
+                )
+                record.appleEventId = newId
+            }
+            record.isSyncedToAppleCalendar = true
+        } catch {
+            record.isSyncedToAppleCalendar = false
+            #if DEBUG
+                print("Apple Calendar同期エラー: \(error.localizedDescription)")
+            #endif
+        }
     }
 }
 

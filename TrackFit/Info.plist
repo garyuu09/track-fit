@@ -21,6 +21,8 @@
 	<string>$(ADMOB_BANNER_UNIT_ID_TEST)</string>
 	<key>ADMOB_BANNER_UNIT_ID_PROD</key>
 	<string>$(ADMOB_BANNER_UNIT_ID_PROD)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>トレーニング記録をカレンダーに同期するために使用されます。</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>お客様の興味関心に合わせた広告を表示するために使用されます。</string>
 	<key>SKAdNetworkItems</key>

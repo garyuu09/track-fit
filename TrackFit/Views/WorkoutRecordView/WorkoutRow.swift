@@ -24,7 +24,7 @@ struct WorkoutRow: View {
                         .font(.footnote)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                    } else if daily.isSyncedToCalendar {
+                    } else if daily.isSyncedToCalendar || daily.isSyncedToAppleCalendar {
                         HStack(spacing: 15) {
                             Image(systemName: "calendar.badge.checkmark")
                             Text("連携済み")
