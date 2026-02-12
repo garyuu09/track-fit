@@ -50,7 +50,7 @@ class RunningViewModel: ObservableObject {
     // MARK: - Methods
 
     /// ランニング記録を保存
-    func saveRunningRecord(context: ModelContext) {
+    func saveRunningRecord(context: ModelContext) throws {
         let record = RunningRecord(
             date: selectedDate,
             distance: distance,
@@ -59,6 +59,7 @@ class RunningViewModel: ObservableObject {
             memo: memo.isEmpty ? nil : memo
         )
         context.insert(record)
+        try context.save()
         resetForm()
     }
 

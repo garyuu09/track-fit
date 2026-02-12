@@ -26,6 +26,8 @@ struct WorkoutRecordView: View {
     @AppStorage("showIntegrationBanner") private var showIntegrationBanner: Bool = true
     // 同期失敗アラート用フラグ
     @State private var showSyncErrorAlert: Bool = false
+    @State private var syncErrorMessage: String = ""
+    @State private var syncErrorWorkoutID: UUID?
     // モーダル表示フラグ
     @State private var isShowCalendarIntegration: Bool = false
     // カレンダー連携促進アラート用フラグ
@@ -331,20 +333,26 @@ struct WorkoutRecordView: View {
             )
         }
         .alert(
-            "連携に失敗しました",
+            "カレンダー同期に失敗しました",
             isPresented: Binding(
                 get: { showSyncErrorAlert && isCalendarFeatureEnabled },
                 set: { showSyncErrorAlert = $0 }
             )
         ) {
+            Button("再試行") {
+                retrySync()
+            }
             Button("再連携") {
                 isShowCalendarIntegration = true
             }
-            Button("キャンセル", role: .cancel) {
-                showIntegrationBanner = true
+            Button("閉じる", role: .cancel) {
+                syncErrorMessage = ""
+                syncErrorWorkoutID = nil
             }
         } message: {
-            Text("もう一度サインインしてください。")
+            Text(
+                syncErrorMessage.isEmpty
+                    ? "もう一度サインインしてください。" : syncErrorMessage)
         }
         .alert(
             "Googleカレンダーと連携しませんか？",
@@ -397,6 +405,16 @@ struct WorkoutRecordView: View {
                 ) { notification in
                     if let id = notification.object as? UUID {
                         syncingWorkoutIDs.insert(id)
+                    }
+                }
+                .onReceive(
+                    NotificationCenter.default.publisher(for: .didFailSyncingWorkout)
+                ) { notification in
+                    if let id = notification.object as? UUID {
+                        syncErrorWorkoutID = id
+                        if let errorMsg = notification.userInfo?["errorMessage"] as? String {
+                            syncErrorMessage = errorMsg
+                        }
                     }
                 }
                 .onReceive(
@@ -560,6 +578,52 @@ struct WorkoutRecordView: View {
         for index in offsets {
             let record = filteredRunningRecords[index]
             context.delete(record)
+        }
+    }
+
+    private func retrySync() {
+        guard let targetID = syncErrorWorkoutID,
+            let daily = dailyWorkouts.first(where: { $0.id == targetID })
+        else { return }
+
+        syncErrorMessage = ""
+        syncErrorWorkoutID = nil
+
+        NotificationCenter.default.post(
+            name: .didStartSyncingWorkout, object: daily.id)
+
+        let viewModel = WorkoutViewModel()
+        Task { @MainActor in
+            var success: Bool
+            if daily.eventId == nil {
+                success = await viewModel.createEvent(dailyWorkout: daily)
+                if success, let newEventId = viewModel.eventId {
+                    daily.eventId = newEventId
+                }
+            } else {
+                success = await viewModel.updateEvent(dailyWorkout: daily)
+            }
+
+            if success {
+                daily.isSyncedToCalendar = true
+                do {
+                    try context.save()
+                } catch {
+                    daily.isSyncedToCalendar = false
+                }
+            } else {
+                daily.isSyncedToCalendar = false
+                let errorMsg =
+                    viewModel.errorMessage ?? "カレンダーとの同期中にエラーが発生しました。"
+                NotificationCenter.default.post(
+                    name: .didFailSyncingWorkout,
+                    object: daily.id,
+                    userInfo: ["errorMessage": errorMsg]
+                )
+            }
+
+            NotificationCenter.default.post(
+                name: .didFinishSyncingWorkout, object: daily.id)
         }
     }
 }

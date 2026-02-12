@@ -21,6 +21,7 @@ struct WorkoutSheetView: View {
     @State private var isStartSheetPresented = false
     @State private var isEndSheetPresented = false
     @State private var isAddingNewRecord = false
+    @State private var showSaveErrorAlert = false
 
     @Environment(\.modelContext) private var context
     @AppStorage("isCalendarLinked") private var isCalendarLinked: Bool = false
@@ -75,6 +76,14 @@ struct WorkoutSheetView: View {
             editSheet(for: rec)
         }
         .overlay(addRecordButton)
+        .alert("データの保存に失敗しました", isPresented: $showSaveErrorAlert) {
+            Button("再試行") {
+                saveWithoutCalendar()
+            }
+            Button("閉じる", role: .cancel) {}
+        } message: {
+            Text("もう一度お試しください。")
+        }
     }
 
     // MARK: - 日時ボタン
@@ -226,11 +235,13 @@ struct WorkoutSheetView: View {
                     #endif
                 }
 
-                if let errorMsg = viewModel.errorMessage {
-                    #if DEBUG
-                        print("Google Calendar同期エラー: \(errorMsg)")
-                    #endif
-                }
+                let errorMsg =
+                    viewModel.errorMessage ?? "カレンダーとの同期中にエラーが発生しました。"
+                NotificationCenter.default.post(
+                    name: .didFailSyncingWorkout,
+                    object: daily.id,
+                    userInfo: ["errorMessage": errorMsg]
+                )
             }
             NotificationCenter.default.post(
                 name: .didFinishSyncingWorkout, object: daily.id)
@@ -245,6 +256,8 @@ struct WorkoutSheetView: View {
             #if DEBUG
                 print("データ保存エラー: \(error.localizedDescription)")
             #endif
+            showSaveErrorAlert = true
+            return
         }
         dismiss()
 
