@@ -9,17 +9,25 @@ struct CalendarHistoryGridView: View {
 
     private let calendar = Calendar.current
 
+    private var workoutsByDay: [Date: [DailyWorkout]] {
+        Dictionary(grouping: dailyWorkouts) { workout in
+            calendar.startOfDay(for: workout.startDate)
+        }
+    }
+
     var body: some View {
+        let groupedWorkouts = workoutsByDay
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 1) {
             ForEach(monthDates, id: \.self) { date in
+                let dayWorkouts = groupedWorkouts[calendar.startOfDay(for: date)]
                 CalendarHistoryDateCell(
                     date: date,
                     isSelected: selectedDate != nil
                         && calendar.isDate(date, inSameDayAs: selectedDate!),
                     isCurrentMonth: calendar.isDate(
                         date, equalTo: currentMonth, toGranularity: .month),
-                    hasWorkout: hasWorkout(on: date),
-                    workoutCount: workouts(for: date).count,
+                    hasWorkout: dayWorkouts != nil,
+                    workoutCount: dayWorkouts?.count ?? 0,
                     isToday: calendar.isDateInToday(date)
                 ) {
                     handleDateTap(date: date)
@@ -51,21 +59,8 @@ struct CalendarHistoryGridView: View {
         return dates
     }
 
-    private func hasWorkout(on date: Date) -> Bool {
-        dailyWorkouts.contains { workout in
-            calendar.isDate(workout.startDate, inSameDayAs: date)
-        }
-    }
-
-    private func workouts(for date: Date) -> [DailyWorkout] {
-        return dailyWorkouts.filter { workout in
-            calendar.isDate(workout.startDate, inSameDayAs: date)
-        }
-    }
-
     private func handleDateTap(date: Date) {
         selectedDate = date
-        let workoutsForDate = workouts(for: date)
-        selectedWorkout = workoutsForDate.first
+        selectedWorkout = workoutsByDay[calendar.startOfDay(for: date)]?.first
     }
 }

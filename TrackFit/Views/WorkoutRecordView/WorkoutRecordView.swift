@@ -96,7 +96,7 @@ struct WorkoutRecordView: View {
             }
         }
 
-        return filtered.sorted { $0.startDate < $1.startDate }
+        return filtered
     }
 
     private var filteredRunningRecords: [RunningRecord] {
@@ -137,7 +137,7 @@ struct WorkoutRecordView: View {
             }
         }
 
-        return filtered.sorted { $0.date < $1.date }
+        return filtered
     }
 
     private var dateRangeLabel: String {
