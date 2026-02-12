@@ -33,7 +33,7 @@ class HomeViewModel: ObservableObject {
     ///   - workouts: 集計対象のトレーニング記録
     ///   - runningRecords: 集計対象のランニング記録
     func updateStats(workouts: [DailyWorkout], runningRecords: [RunningRecord] = []) {
-        self.recentWorkouts = Array(workouts.sorted(by: { $0.startDate > $1.startDate }).prefix(5))
+        self.recentWorkouts = Array(workouts.prefix(5))
         self.currentWeekStreak = calculateStreak(workouts: workouts, runningRecords: runningRecords)
 
         self.activityLog = calculateActivityLog(workouts: workouts, runningRecords: runningRecords)

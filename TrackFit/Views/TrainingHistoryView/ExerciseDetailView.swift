@@ -23,13 +23,12 @@ struct ExerciseDetailView: View {
 
     // グラフ用: 日付昇順にならべかえ（重量がnilでないもののみ）
     private var chartData: [(date: Date, maxWeight: Double)] {
-        let history = exerciseHistory.reversed()  // 昇順にする
-        return history.compactMap { item in
+        exerciseHistory.compactMap { item in
             if let weight = item.record.weight {
                 return (item.date, weight)
             }
             return nil
-        }
+        }.reversed()
     }
 
     var body: some View {

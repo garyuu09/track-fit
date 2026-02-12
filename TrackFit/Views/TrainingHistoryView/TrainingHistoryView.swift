@@ -14,6 +14,13 @@ struct TrainingHistoryView: View {
     @State private var selectedRunType: RunType?
     @Binding var isSearchPresented: Bool
 
+    private static let monthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年M月"
+        formatter.locale = Locale(identifier: "ja_JP")
+        return formatter
+    }()
+
     init(isSearchPresented: Binding<Bool> = .constant(false)) {
         self._isSearchPresented = isSearchPresented
     }
@@ -45,12 +52,8 @@ struct TrainingHistoryView: View {
 
     // 月ごとにグループ化されたランニング記録
     private var groupedRunningRecords: [(month: String, records: [RunningRecord])] {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年M月"
-        formatter.locale = Locale(identifier: "ja_JP")
-
         let grouped = Dictionary(grouping: filteredRunningRecords) { record in
-            formatter.string(from: record.date)
+            Self.monthFormatter.string(from: record.date)
         }
         return grouped.map { (month: $0.key, records: $0.value) }
             .sorted { $0.records[0].date > $1.records[0].date }
