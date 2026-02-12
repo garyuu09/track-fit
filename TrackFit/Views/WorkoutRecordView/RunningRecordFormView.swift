@@ -16,6 +16,7 @@ struct RunningRecordFormView: View {
 
     // 編集モード用
     var editingRecord: RunningRecord?
+    @State private var showSaveErrorAlert = false
 
     var body: some View {
         NavigationStack {
@@ -141,14 +142,39 @@ struct RunningRecordFormView: View {
                     viewModel.loadForEdit(record: record)
                 }
             }
+            .alert("データの保存に失敗しました", isPresented: $showSaveErrorAlert) {
+                Button("再試行") {
+                    saveRecord()
+                }
+                Button("閉じる", role: .cancel) {}
+            } message: {
+                Text("もう一度お試しください。")
+            }
         }
     }
 
     private func saveRecord() {
         if let existing = editingRecord {
             viewModel.updateRunningRecord(existing)
+            do {
+                try context.save()
+            } catch {
+                #if DEBUG
+                    print("データ保存エラー: \(error.localizedDescription)")
+                #endif
+                showSaveErrorAlert = true
+                return
+            }
         } else {
-            viewModel.saveRunningRecord(context: context)
+            do {
+                try viewModel.saveRunningRecord(context: context)
+            } catch {
+                #if DEBUG
+                    print("データ保存エラー: \(error.localizedDescription)")
+                #endif
+                showSaveErrorAlert = true
+                return
+            }
         }
         dismiss()
     }

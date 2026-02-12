@@ -9,6 +9,7 @@ struct CustomDatePicker: View {
     @Binding var savedDate: Date?
     var dailyWorkouts: [DailyWorkout]
     @State var selectedDate: Date = Date()
+    @State private var showSaveErrorAlert = false
 
     var body: some View {
         ZStack {
@@ -35,11 +36,19 @@ struct CustomDatePicker: View {
                     Button("保存") {
                         savedDate = selectedDate
                         guard let savedDate else { return }
-                        showDatePicker = false
                         let newDaily = DailyWorkout(
                             startDate: savedDate, endDate: savedDate.addingTimeInterval(60 * 60),
                             records: [], isSyncedToCalendar: false)
                         context.insert(newDaily)
+                        do {
+                            try context.save()
+                            showDatePicker = false
+                        } catch {
+                            #if DEBUG
+                                print("データ保存エラー: \(error.localizedDescription)")
+                            #endif
+                            showSaveErrorAlert = true
+                        }
                     }
                 }
                 .padding(.vertical, 15)
@@ -50,6 +59,11 @@ struct CustomDatePicker: View {
                 colorScheme == .dark ? Color.black.cornerRadius(30) : Color.white.cornerRadius(30)
             )
             .padding(.horizontal, 20)
+            .alert("データの保存に失敗しました", isPresented: $showSaveErrorAlert) {
+                Button("閉じる", role: .cancel) {}
+            } message: {
+                Text("もう一度お試しください。")
+            }
         }
     }
 }
