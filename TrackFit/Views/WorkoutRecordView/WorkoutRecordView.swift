@@ -5,6 +5,9 @@ import SwiftUI
 // MARK: - メインビュー
 struct WorkoutRecordView: View {
     @State private var syncingWorkoutIDs: Set<UUID> = []
+    // 削除確認用
+    @State private var workoutToDelete: DailyWorkout?
+    @State private var runningRecordToDelete: RunningRecord?
 
     enum WorkoutType: String, CaseIterable {
         case weightTraining = "筋トレ"
@@ -373,6 +376,52 @@ struct WorkoutRecordView: View {
         .sheet(item: $editingRunningRecord) { record in
             RunningRecordFormView(editingRecord: record)
         }
+        .alert(
+            "トレーニングを削除",
+            isPresented: Binding(
+                get: { workoutToDelete != nil },
+                set: { if !$0 { workoutToDelete = nil } }
+            )
+        ) {
+            Button("削除", role: .destructive) {
+                if let workout = workoutToDelete {
+                    context.delete(workout)
+                    workoutToDelete = nil
+                }
+            }
+            Button("キャンセル", role: .cancel) {
+                workoutToDelete = nil
+            }
+        } message: {
+            if let workout = workoutToDelete {
+                Text(
+                    "\(DateHelper.formattedDate(workout.startDate))のトレーニングを削除しますか？\nこの操作は元に戻せません。"
+                )
+            }
+        }
+        .alert(
+            "ランニング記録を削除",
+            isPresented: Binding(
+                get: { runningRecordToDelete != nil },
+                set: { if !$0 { runningRecordToDelete = nil } }
+            )
+        ) {
+            Button("削除", role: .destructive) {
+                if let record = runningRecordToDelete {
+                    context.delete(record)
+                    runningRecordToDelete = nil
+                }
+            }
+            Button("キャンセル", role: .cancel) {
+                runningRecordToDelete = nil
+            }
+        } message: {
+            if let record = runningRecordToDelete {
+                Text(
+                    "\(DateHelper.formattedDate(record.date))のランニング記録を削除しますか？\nこの操作は元に戻せません。"
+                )
+            }
+        }
     }
 
     // MARK: - Private Views
@@ -550,16 +599,14 @@ struct WorkoutRecordView: View {
     }
 
     private func deleteDailyWorkout(at offsets: IndexSet) {
-        for index in offsets {
-            let dailyWorkout = filteredWorkouts[index]
-            context.delete(dailyWorkout)
+        if let index = offsets.first {
+            workoutToDelete = filteredWorkouts[index]
         }
     }
 
     private func deleteRunningRecord(at offsets: IndexSet) {
-        for index in offsets {
-            let record = filteredRunningRecords[index]
-            context.delete(record)
+        if let index = offsets.first {
+            runningRecordToDelete = filteredRunningRecords[index]
         }
     }
 }
